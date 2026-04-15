@@ -121,6 +121,7 @@ export const processDueRecurring = async (now: number = Date.now()): Promise<num
         note: rule.note,
         account_id: rule.account_id,
         category_id: rule.category_id,
+        receipt_image: null,
       });
       created++;
       last = next;

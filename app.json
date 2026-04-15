@@ -40,7 +40,19 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Budget to use the camera to scan receipts."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Budget to access your photos to pick receipt images."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

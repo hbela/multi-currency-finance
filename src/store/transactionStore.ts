@@ -13,6 +13,7 @@ interface TransactionStore {
     note: string | null;
     account_id: string | null;
     category_id: string | null;
+    receipt_image: string | null;
   }) => Promise<Transaction>;
   update: (row: Transaction) => Promise<void>;
   remove: (id: string) => Promise<void>;

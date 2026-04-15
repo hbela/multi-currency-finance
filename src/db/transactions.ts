@@ -32,6 +32,7 @@ export const createTransaction = async (input: {
   note: string | null;
   account_id: string | null;
   category_id: string | null;
+  receipt_image: string | null;
 }): Promise<Transaction> => {
   const row: Transaction = {
     id: newId(),
@@ -41,7 +42,7 @@ export const createTransaction = async (input: {
     note: input.note,
     account_id: input.account_id,
     category_id: input.category_id,
-    receipt_image: null,
+    receipt_image: input.receipt_image,
     created_at: Date.now(),
   };
   await db.runAsync(
