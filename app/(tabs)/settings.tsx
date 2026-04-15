@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useAccountStore } from '@/src/store/accountStore';
 import { useCategoryStore } from '@/src/store/categoryStore';
 import { useRecurringStore } from '@/src/store/recurringStore';
+import { useThemeStore, ThemeMode } from '@/src/store/themeStore';
 import { AccountType, TxnType } from '@/src/types';
 import { useAppTheme } from '@/src/theme';
 
@@ -32,6 +33,8 @@ export default function SettingsScreen() {
   const activeRecurringCount = useRecurringStore(
     (s) => s.items.filter((r) => r.active === 1).length
   );
+  const themeMode = useThemeStore((s) => s.mode);
+  const setThemeMode = useThemeStore((s) => s.setMode);
 
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountName, setAccountName] = useState('');
@@ -61,6 +64,23 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: theme.colors.background }}>
+      <List.Section>
+        <List.Subheader>Appearance</List.Subheader>
+        <View style={{ paddingHorizontal: 16 }}>
+          <SegmentedButtons
+            value={themeMode}
+            onValueChange={(v) => setThemeMode(v as ThemeMode)}
+            buttons={[
+              { value: 'system', label: 'System', icon: 'theme-light-dark' },
+              { value: 'light', label: 'Light', icon: 'white-balance-sunny' },
+              { value: 'dark', label: 'Dark', icon: 'weather-night' },
+            ]}
+          />
+        </View>
+      </List.Section>
+
+      <Divider />
+
       <List.Section>
         <List.Subheader>Accounts</List.Subheader>
         {accounts.map((a) => (

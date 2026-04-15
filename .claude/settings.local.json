@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"/c/Users/hajze/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s 192.168.1.137:38301 reverse tcp:8081 tcp:8081)"
+    ]
+  }
+}

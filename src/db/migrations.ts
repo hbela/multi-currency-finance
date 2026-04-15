@@ -1,8 +1,15 @@
 import { db } from './db';
 
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 export const runMigrations = async (): Promise<void> => {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
+
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const current = row?.user_version ?? 0;
   if (current >= SCHEMA_VERSION) return;

@@ -36,6 +36,21 @@ export const monthKey = (d: Date = new Date()): string => {
 
 export const monthKeyFromTs = (ts: number): string => monthKey(new Date(ts));
 
+export const monthKeysEndingAt = (count: number, ref: Date = new Date()): string[] => {
+  const keys: string[] = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+    keys.push(monthKey(d));
+  }
+  return keys;
+};
+
+export const monthShortLabel = (key: string): string => {
+  const [y, m] = key.split('-').map(Number);
+  const d = new Date(y, m - 1, 1);
+  return d.toLocaleDateString(undefined, { month: 'short' });
+};
+
 export const monthRange = (key: string): { start: number; end: number } => {
   const [y, m] = key.split('-').map(Number);
   const start = new Date(y, m - 1, 1, 0, 0, 0, 0).getTime();

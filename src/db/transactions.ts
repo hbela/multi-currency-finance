@@ -117,3 +117,39 @@ export const getCategoryBreakdown = async (
     [start, end, type]
   );
 };
+
+export interface MonthlySeriesPoint {
+  month: string;
+  income: number;
+  expense: number;
+}
+
+export const getMonthlyTotalsSeries = async (
+  months: string[]
+): Promise<MonthlySeriesPoint[]> => {
+  if (months.length === 0) return [];
+  const { start } = monthRange(months[0]);
+  const { end } = monthRange(months[months.length - 1]);
+  const rows = await db.getAllAsync<{
+    month: string;
+    income: number | null;
+    expense: number | null;
+  }>(
+    `SELECT strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS month,
+       COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) AS income,
+       COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS expense
+     FROM transactions
+     WHERE date >= ? AND date < ?
+     GROUP BY month`,
+    [start, end]
+  );
+  const map = new Map(rows.map((r) => [r.month, r]));
+  return months.map((m) => {
+    const row = map.get(m);
+    return {
+      month: m,
+      income: row?.income ?? 0,
+      expense: row?.expense ?? 0,
+    };
+  });
+};

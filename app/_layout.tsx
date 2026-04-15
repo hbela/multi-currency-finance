@@ -19,6 +19,7 @@ import { useCategoryStore } from '@/src/store/categoryStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { useBudgetStore } from '@/src/store/budgetStore';
 import { useRecurringStore } from '@/src/store/recurringStore';
+import { useThemeStore } from '@/src/store/themeStore';
 import { processDueRecurring } from '@/src/db/recurring';
 import { darkTheme, lightTheme } from '@/src/theme';
 
@@ -36,7 +37,8 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const systemScheme = useColorScheme();
+  const themeMode = useThemeStore((s) => s.mode);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function RootLayout() {
           useTransactionStore.getState().load(),
           useBudgetStore.getState().load(),
           useRecurringStore.getState().load(),
+          useThemeStore.getState().load(),
         ]);
       } finally {
         setReady(true);
@@ -61,7 +64,8 @@ export default function RootLayout() {
 
   if (!ready) return null;
 
-  const isDark = colorScheme === 'dark';
+  const isDark =
+    themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
   const paperTheme = isDark ? darkTheme : lightTheme;
   const navTheme = isDark ? NavDark : NavLight;
 
