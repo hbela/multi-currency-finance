@@ -1,33 +1,70 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAppTheme } from '@/src/theme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const theme = useAppTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+        tabBarStyle: {
+          backgroundColor: theme.colors.elevation.level2,
+          borderTopColor: theme.colors.outlineVariant,
+        },
+        headerStyle: { backgroundColor: theme.colors.elevation.level2 },
+        headerTintColor: theme.colors.onSurface,
+        headerShown: true,
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Dashboard',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="view-dashboard" color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="transactions"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Transactions',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="swap-horizontal" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="budgets"
+        options={{
+          title: 'Budgets',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="wallet" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: 'Reports',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="chart-pie" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="cog" color={color} size={size} />
+          ),
         }}
       />
     </Tabs>
