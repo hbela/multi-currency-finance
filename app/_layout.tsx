@@ -1,3 +1,4 @@
+import '@/src/i18n';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -12,6 +13,7 @@ import {
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ScreenshotProvider } from '@/src/context/ScreenshotContext';
 import { runMigrations } from '@/src/db/migrations';
 import { seedIfEmpty } from '@/src/db/seed';
 import { useAccountStore } from '@/src/store/accountStore';
@@ -72,6 +74,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={paperTheme}>
+        <ScreenshotProvider>
         <ThemeProvider value={navTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -95,6 +98,7 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>
+        </ScreenshotProvider>
       </PaperProvider>
     </SafeAreaProvider>
   );

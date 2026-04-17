@@ -1,5 +1,5 @@
 export type AccountType = 'cash' | 'bank' | 'card';
-export type TxnType = 'income' | 'expense';
+export type TxnType = 'income' | 'expense' | 'transfer' | 'investment' | 'debt' | 'subscription';
 export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly';
 
 export interface Account {
@@ -28,6 +28,38 @@ export interface Transaction {
   category_id: string | null;
   receipt_image: string | null;
   created_at: number;
+  // Financial accuracy (all types)
+  currency: string | null;
+  exchange_rate: number | null;
+  original_amount: number | null;
+  original_currency: string | null;
+  // Expense
+  merchant: string | null;
+  is_reimbursable: 0 | 1 | null;
+  // Income
+  source: string | null;
+  payer: string | null;
+  is_taxable: 0 | 1 | null;
+  // Transfer
+  counterparty: string | null;
+  reference: string | null;
+  fee: number | null;
+  // Investment
+  security_name: string | null;
+  symbol: string | null;
+  quantity: number | null;
+  price: number | null;
+  order_type: string | null;
+  // Debt
+  creditor: string | null;
+  debt_type: string | null;
+  interest_rate: number | null;
+  remaining_term: number | null;
+  // Subscription
+  provider: string | null;
+  plan: string | null;
+  next_billing_date: number | null;
+  is_auto_renew: 0 | 1 | null;
 }
 
 export interface Budget {

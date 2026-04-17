@@ -25,7 +25,7 @@ export const listTransactionsByMonth = (month: string): Promise<Transaction[]> =
   );
 };
 
-export const createTransaction = async (input: {
+export type CreateTransactionInput = {
   amount: number;
   type: TxnType;
   date: number;
@@ -33,7 +33,34 @@ export const createTransaction = async (input: {
   account_id: string | null;
   category_id: string | null;
   receipt_image: string | null;
-}): Promise<Transaction> => {
+  currency?: string | null;
+  exchange_rate?: number | null;
+  original_amount?: number | null;
+  original_currency?: string | null;
+  merchant?: string | null;
+  is_reimbursable?: 0 | 1 | null;
+  source?: string | null;
+  payer?: string | null;
+  is_taxable?: 0 | 1 | null;
+  counterparty?: string | null;
+  reference?: string | null;
+  fee?: number | null;
+  security_name?: string | null;
+  symbol?: string | null;
+  quantity?: number | null;
+  price?: number | null;
+  order_type?: string | null;
+  creditor?: string | null;
+  debt_type?: string | null;
+  interest_rate?: number | null;
+  remaining_term?: number | null;
+  provider?: string | null;
+  plan?: string | null;
+  next_billing_date?: number | null;
+  is_auto_renew?: 0 | 1 | null;
+};
+
+export const createTransaction = async (input: CreateTransactionInput): Promise<Transaction> => {
   const row: Transaction = {
     id: newId(),
     amount: input.amount,
@@ -44,21 +71,61 @@ export const createTransaction = async (input: {
     category_id: input.category_id,
     receipt_image: input.receipt_image,
     created_at: Date.now(),
+    currency: input.currency ?? null,
+    exchange_rate: input.exchange_rate ?? null,
+    original_amount: input.original_amount ?? null,
+    original_currency: input.original_currency ?? null,
+    merchant: input.merchant ?? null,
+    is_reimbursable: input.is_reimbursable ?? null,
+    source: input.source ?? null,
+    payer: input.payer ?? null,
+    is_taxable: input.is_taxable ?? null,
+    counterparty: input.counterparty ?? null,
+    reference: input.reference ?? null,
+    fee: input.fee ?? null,
+    security_name: input.security_name ?? null,
+    symbol: input.symbol ?? null,
+    quantity: input.quantity ?? null,
+    price: input.price ?? null,
+    order_type: input.order_type ?? null,
+    creditor: input.creditor ?? null,
+    debt_type: input.debt_type ?? null,
+    interest_rate: input.interest_rate ?? null,
+    remaining_term: input.remaining_term ?? null,
+    provider: input.provider ?? null,
+    plan: input.plan ?? null,
+    next_billing_date: input.next_billing_date ?? null,
+    is_auto_renew: input.is_auto_renew ?? null,
   };
   await db.runAsync(
-    `INSERT INTO transactions
-       (id, amount, type, date, note, account_id, category_id, receipt_image, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO transactions (
+       id, amount, type, date, note, account_id, category_id, receipt_image, created_at,
+       currency, exchange_rate, original_amount, original_currency,
+       merchant, is_reimbursable,
+       source, payer, is_taxable,
+       counterparty, reference, fee,
+       security_name, symbol, quantity, price, order_type,
+       creditor, debt_type, interest_rate, remaining_term,
+       provider, plan, next_billing_date, is_auto_renew
+     ) VALUES (
+       ?, ?, ?, ?, ?, ?, ?, ?, ?,
+       ?, ?, ?, ?,
+       ?, ?,
+       ?, ?, ?,
+       ?, ?, ?,
+       ?, ?, ?, ?, ?,
+       ?, ?, ?, ?,
+       ?, ?, ?, ?
+     )`,
     [
-      row.id,
-      row.amount,
-      row.type,
-      row.date,
-      row.note,
-      row.account_id,
-      row.category_id,
-      row.receipt_image,
-      row.created_at,
+      row.id, row.amount, row.type, row.date, row.note, row.account_id, row.category_id, row.receipt_image, row.created_at,
+      row.currency, row.exchange_rate, row.original_amount, row.original_currency,
+      row.merchant, row.is_reimbursable,
+      row.source, row.payer, row.is_taxable,
+      row.counterparty, row.reference, row.fee,
+      row.security_name, row.symbol, row.quantity, row.price, row.order_type,
+      row.creditor, row.debt_type, row.interest_rate, row.remaining_term,
+      row.provider, row.plan, row.next_billing_date, row.is_auto_renew,
     ]
   );
   return row;
@@ -68,16 +135,25 @@ export const updateTransaction = async (row: Transaction): Promise<void> => {
   await db.runAsync(
     `UPDATE transactions SET
        amount = ?, type = ?, date = ?, note = ?,
-       account_id = ?, category_id = ?, receipt_image = ?
+       account_id = ?, category_id = ?, receipt_image = ?,
+       currency = ?, exchange_rate = ?, original_amount = ?, original_currency = ?,
+       merchant = ?, is_reimbursable = ?,
+       source = ?, payer = ?, is_taxable = ?,
+       counterparty = ?, reference = ?, fee = ?,
+       security_name = ?, symbol = ?, quantity = ?, price = ?, order_type = ?,
+       creditor = ?, debt_type = ?, interest_rate = ?, remaining_term = ?,
+       provider = ?, plan = ?, next_billing_date = ?, is_auto_renew = ?
      WHERE id = ?`,
     [
-      row.amount,
-      row.type,
-      row.date,
-      row.note,
-      row.account_id,
-      row.category_id,
-      row.receipt_image,
+      row.amount, row.type, row.date, row.note,
+      row.account_id, row.category_id, row.receipt_image,
+      row.currency, row.exchange_rate, row.original_amount, row.original_currency,
+      row.merchant, row.is_reimbursable,
+      row.source, row.payer, row.is_taxable,
+      row.counterparty, row.reference, row.fee,
+      row.security_name, row.symbol, row.quantity, row.price, row.order_type,
+      row.creditor, row.debt_type, row.interest_rate, row.remaining_term,
+      row.provider, row.plan, row.next_billing_date, row.is_auto_renew,
       row.id,
     ]
   );

@@ -10,7 +10,9 @@ export const formatCurrency = (amount: number, currency = 'USD'): string => {
   }
 };
 
-export const formatSigned = (amount: number, type: 'income' | 'expense', currency = 'USD'): string => {
+import { TxnType } from '../types';
+
+export const formatSigned = (amount: number, type: TxnType, currency = 'USD'): string => {
   const sign = type === 'expense' ? '-' : '+';
   return `${sign}${formatCurrency(Math.abs(amount), currency)}`;
 };

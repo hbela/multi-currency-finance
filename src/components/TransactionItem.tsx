@@ -18,7 +18,12 @@ export const TransactionItem: React.FC<Props> = ({ transaction, onPress }) => {
     transaction.account_id ? s.items.find((a) => a.id === transaction.account_id) : undefined
   );
   const currency = account?.currency ?? 'USD';
-  const color = transaction.type === 'income' ? theme.colors.income : theme.colors.expense;
+  const color =
+    transaction.type === 'income'
+      ? theme.colors.income
+      : transaction.type === 'expense'
+      ? theme.colors.expense
+      : theme.colors.onSurface;
 
   return (
     <List.Item

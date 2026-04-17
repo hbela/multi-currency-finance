@@ -6,7 +6,10 @@ export interface ParsedReceipt {
 }
 
 const TOTAL_KEYWORDS = /\b(total|amount\s*due|grand\s*total|balance\s*due|balance)\b/i;
+const SUBTOTAL_KEYWORDS = /\b(subtotal|sub\s*total)\b/i;
 const MONEY_RE = /(\d{1,3}(?:[ ,.]\d{3})*|\d+)[.,](\d{2})\b/g;
+
+const SKIP_VENDOR = /^(receipt|invoice|tel|phone|fax|address|date|order|ref|no\.|#|subtotal|tax|total|description|qty|quantity|price|amount|payment|www\.|http)/i;
 
 const MONTHS: Record<string, number> = {
   jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
@@ -20,8 +23,9 @@ const parseMoney = (whole: string, frac: string): number => {
 };
 
 const extractAmount = (lines: string[]): number | null => {
+  // Strategy 1: total keyword and amount on the same line (e.g. "Total $1,241.46")
   for (const line of lines) {
-    if (!TOTAL_KEYWORDS.test(line)) continue;
+    if (!TOTAL_KEYWORDS.test(line) || SUBTOTAL_KEYWORDS.test(line)) continue;
     const matches = [...line.matchAll(MONEY_RE)];
     if (matches.length === 0) continue;
     const last = matches[matches.length - 1];
@@ -29,6 +33,21 @@ const extractAmount = (lines: string[]): number | null => {
     if (Number.isFinite(n) && n > 0) return n;
   }
 
+  // Strategy 2: "Total" label on its own line, amount on the next 1-2 lines
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (!TOTAL_KEYWORDS.test(lines[i]) || SUBTOTAL_KEYWORDS.test(lines[i])) continue;
+    if ([...lines[i].matchAll(MONEY_RE)].length > 0) continue; // already handled above
+    for (let j = i + 1; j <= Math.min(i + 2, lines.length - 1); j++) {
+      const matches = [...lines[j].matchAll(MONEY_RE)];
+      if (matches.length > 0) {
+        const last = matches[matches.length - 1];
+        const n = parseMoney(last[1], last[2]);
+        if (Number.isFinite(n) && n > 0) return n;
+      }
+    }
+  }
+
+  // Strategy 3: fallback — largest amount in the bottom half of the receipt
   const start = Math.floor(lines.length / 2);
   let best = NaN;
   for (let i = start; i < lines.length; i++) {
@@ -89,18 +108,32 @@ const extractDate = (lines: string[]): number | null => {
   return null;
 };
 
+const toTitleCase = (line: string): string =>
+  line
+    .split(/\s+/)
+    .slice(0, 5)
+    .map((w) => (w.length > 1 ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+    .join(' ');
+
 const extractVendor = (lines: string[]): string | null => {
-  for (const raw of lines) {
+  const candidates: string[] = [];
+
+  for (const raw of lines.slice(0, 12)) {
     const line = raw.trim();
     if (line.length < 2) continue;
     if (!/[a-zA-Z]/.test(line)) continue;
-    if (/^(receipt|invoice|tel|phone|fax|address)/i.test(line)) continue;
-    const words = line.split(/\s+/).slice(0, 5);
-    return words
-      .map((w) => (w.length > 1 ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
-      .join(' ');
+    if (SKIP_VENDOR.test(line)) continue;
+    // Skip lines that are mostly digits/symbols (e.g. phone numbers, prices)
+    const letterRatio = (line.match(/[a-zA-Z]/g) ?? []).length / line.length;
+    if (letterRatio < 0.4) continue;
+    candidates.push(line);
   }
-  return null;
+
+  if (candidates.length === 0) return null;
+
+  // Prefer a multi-word line — more likely to be a company name than a single word
+  const multiWord = candidates.find((c) => c.split(/\s+/).length >= 2);
+  return toTitleCase(multiWord ?? candidates[0]);
 };
 
 export const parseReceiptText = (text: string): ParsedReceipt => {

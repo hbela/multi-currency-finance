@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import {
   Button,
+  Chip,
   Dialog,
   Divider,
   IconButton,
@@ -11,6 +12,8 @@ import {
   Text,
   TextInput,
 } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
+import { useScreenshot, DEVICE_DIMENSIONS, DeviceType } from '@/src/context/ScreenshotContext';
 import { useRouter } from 'expo-router';
 
 import { useAccountStore } from '@/src/store/accountStore';
@@ -23,6 +26,8 @@ import { useAppTheme } from '@/src/theme';
 export default function SettingsScreen() {
   const theme = useAppTheme();
   const router = useRouter();
+  const { t, i18n } = useTranslation();
+
   const accounts = useAccountStore((s) => s.items);
   const addAccount = useAccountStore((s) => s.add);
   const removeAccount = useAccountStore((s) => s.remove);
@@ -35,6 +40,15 @@ export default function SettingsScreen() {
   );
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
+
+  const {
+    selectedDevice,
+    setSelectedDevice,
+    capturedScreenshots,
+    isUploading,
+    uploadAllToGoogleDrive,
+    clearAllScreenshots,
+  } = useScreenshot();
 
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountName, setAccountName] = useState('');
@@ -62,18 +76,24 @@ export default function SettingsScreen() {
     setCategoryType('expense');
   };
 
+  const screenshotCountLabel = t(
+    capturedScreenshots.length === 1 ? 'settings.screenshotCount_one' : 'settings.screenshotCount_other',
+    { count: capturedScreenshots.length }
+  );
+
   return (
     <ScrollView style={{ backgroundColor: theme.colors.background }}>
+      {/* Appearance */}
       <List.Section>
-        <List.Subheader>Appearance</List.Subheader>
+        <List.Subheader>{t('settings.appearance')}</List.Subheader>
         <View style={{ paddingHorizontal: 16 }}>
           <SegmentedButtons
             value={themeMode}
             onValueChange={(v) => setThemeMode(v as ThemeMode)}
             buttons={[
-              { value: 'system', label: 'System', icon: 'theme-light-dark' },
-              { value: 'light', label: 'Light', icon: 'white-balance-sunny' },
-              { value: 'dark', label: 'Dark', icon: 'weather-night' },
+              { value: 'system', label: t('settings.themeSystem'), icon: 'theme-light-dark' },
+              { value: 'light', label: t('settings.themeLight'), icon: 'white-balance-sunny' },
+              { value: 'dark', label: t('settings.themeDark'), icon: 'weather-night' },
             ]}
           />
         </View>
@@ -81,8 +101,28 @@ export default function SettingsScreen() {
 
       <Divider />
 
+      {/* Language */}
       <List.Section>
-        <List.Subheader>Accounts</List.Subheader>
+        <List.Subheader>{t('settings.language')}</List.Subheader>
+        <View style={{ paddingHorizontal: 16 }}>
+          <SegmentedButtons
+            value={i18n.language}
+            onValueChange={(lang) => i18n.changeLanguage(lang)}
+            buttons={[
+              { value: 'en', label: 'EN' },
+              { value: 'hu', label: 'HU' },
+              { value: 'de', label: 'DE' },
+              { value: 'fr', label: 'FR' },
+            ]}
+          />
+        </View>
+      </List.Section>
+
+      <Divider />
+
+      {/* Accounts */}
+      <List.Section>
+        <List.Subheader>{t('settings.accounts')}</List.Subheader>
         {accounts.map((a) => (
           <List.Item
             key={a.id}
@@ -96,15 +136,16 @@ export default function SettingsScreen() {
         ))}
         <View style={{ paddingHorizontal: 16 }}>
           <Button icon="plus" onPress={() => setAccountOpen(true)}>
-            Add account
+            {t('settings.addAccount')}
           </Button>
         </View>
       </List.Section>
 
       <Divider />
 
+      {/* Categories */}
       <List.Section>
-        <List.Subheader>Categories</List.Subheader>
+        <List.Subheader>{t('settings.categories')}</List.Subheader>
         {categories.map((c) => (
           <List.Item
             key={c.id}
@@ -116,21 +157,22 @@ export default function SettingsScreen() {
         ))}
         <View style={{ paddingHorizontal: 16 }}>
           <Button icon="plus" onPress={() => setCategoryOpen(true)}>
-            Add category
+            {t('settings.addCategory')}
           </Button>
         </View>
       </List.Section>
 
       <Divider />
 
+      {/* Automation */}
       <List.Section>
-        <List.Subheader>Automation</List.Subheader>
+        <List.Subheader>{t('settings.automation')}</List.Subheader>
         <List.Item
-          title="Recurring transactions"
+          title={t('settings.recurringTransactions')}
           description={
             recurringCount === 0
-              ? 'No rules yet'
-              : `${activeRecurringCount} active · ${recurringCount} total`
+              ? t('settings.recurringNone')
+              : t('settings.recurringActive', { active: String(activeRecurringCount), total: String(recurringCount) })
           }
           left={(p) => <List.Icon {...p} icon="repeat" />}
           right={(p) => <List.Icon {...p} icon="chevron-right" />}
@@ -140,29 +182,71 @@ export default function SettingsScreen() {
 
       <Divider />
 
+      {/* Data */}
       <List.Section>
-        <List.Subheader>Data</List.Subheader>
-        <List.Item title="Export database" description="Coming soon" disabled />
-        <List.Item title="Import database" description="Coming soon" disabled />
-        <List.Item title="Cloud backup" description="Coming soon" disabled />
+        <List.Subheader>{t('settings.data')}</List.Subheader>
+        <List.Item title={t('settings.exportDb')} description={t('settings.comingSoon')} disabled />
+        <List.Item title={t('settings.importDb')} description={t('settings.comingSoon')} disabled />
+      </List.Section>
+
+      <Divider />
+
+      {/* Screenshots */}
+      <List.Section>
+        <List.Subheader>{t('settings.screenshots')}</List.Subheader>
+        <View style={{ paddingHorizontal: 16, gap: 12 }}>
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            {t('settings.deviceLabel')}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {(['phone', 'tablet7', 'tablet10'] as DeviceType[]).map((d) => (
+              <Chip
+                key={d}
+                selected={selectedDevice === d}
+                onPress={() => setSelectedDevice(d)}
+                compact>
+                {DEVICE_DIMENSIONS[d].label}
+              </Chip>
+            ))}
+          </View>
+          <Text variant="bodyMedium">{screenshotCountLabel}</Text>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Button
+              mode="contained"
+              onPress={uploadAllToGoogleDrive}
+              loading={isUploading}
+              disabled={capturedScreenshots.length === 0 || isUploading}
+              icon="google-drive"
+              style={{ flex: 1 }}>
+              {t('settings.uploadToDrive')}
+            </Button>
+            <Button
+              mode="outlined"
+              onPress={clearAllScreenshots}
+              disabled={capturedScreenshots.length === 0}
+              icon="delete">
+              {t('settings.clear')}
+            </Button>
+          </View>
+        </View>
       </List.Section>
 
       <View style={{ padding: 16 }}>
         <Text
           variant="bodySmall"
           style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>
-          Budget · v1.0 · offline
+          {t('settings.version')}
         </Text>
       </View>
 
       <Portal>
         <Dialog visible={accountOpen} onDismiss={() => setAccountOpen(false)}>
-          <Dialog.Title>New account</Dialog.Title>
+          <Dialog.Title>{t('settings.newAccount')}</Dialog.Title>
           <Dialog.Content style={{ gap: 12 }}>
-            <TextInput mode="outlined" label="Name" value={accountName} onChangeText={setAccountName} />
+            <TextInput mode="outlined" label={t('settings.accountName')} value={accountName} onChangeText={setAccountName} />
             <TextInput
               mode="outlined"
-              label="Currency (3-letter)"
+              label={t('settings.accountCurrency')}
               value={accountCurrency}
               onChangeText={(v) => setAccountCurrency(v.toUpperCase())}
               autoCapitalize="characters"
@@ -179,27 +263,27 @@ export default function SettingsScreen() {
             />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setAccountOpen(false)}>Cancel</Button>
-            <Button onPress={submitAccount}>Save</Button>
+            <Button onPress={() => setAccountOpen(false)}>{t('common.cancel')}</Button>
+            <Button onPress={submitAccount}>{t('common.save')}</Button>
           </Dialog.Actions>
         </Dialog>
 
         <Dialog visible={categoryOpen} onDismiss={() => setCategoryOpen(false)}>
-          <Dialog.Title>New category</Dialog.Title>
+          <Dialog.Title>{t('settings.newCategory')}</Dialog.Title>
           <Dialog.Content style={{ gap: 12 }}>
-            <TextInput mode="outlined" label="Name" value={categoryName} onChangeText={setCategoryName} />
+            <TextInput mode="outlined" label={t('settings.categoryName')} value={categoryName} onChangeText={setCategoryName} />
             <SegmentedButtons
               value={categoryType}
               onValueChange={(v) => setCategoryType(v as TxnType)}
               buttons={[
-                { value: 'expense', label: 'Expense' },
-                { value: 'income', label: 'Income' },
+                { value: 'expense', label: t('txn.types.expense') },
+                { value: 'income', label: t('txn.types.income') },
               ]}
             />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setCategoryOpen(false)}>Cancel</Button>
-            <Button onPress={submitCategory}>Save</Button>
+            <Button onPress={() => setCategoryOpen(false)}>{t('common.cancel')}</Button>
+            <Button onPress={submitCategory}>{t('common.save')}</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

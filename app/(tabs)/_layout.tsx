@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { useAppTheme } from '@/src/theme';
+import ScreenshotCaptureButton from '@/src/components/ScreenshotCaptureButton';
 
 export default function TabLayout() {
   const theme = useAppTheme();
@@ -29,6 +30,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="view-dashboard" color={color} size={size} />
           ),
+          headerRight: () => <ScreenshotCaptureButton screenName="dashboard" />,
         }}
       />
       <Tabs.Screen
@@ -38,6 +40,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="swap-horizontal" color={color} size={size} />
           ),
+          headerRight: () => <ScreenshotCaptureButton screenName="transactions" />,
         }}
       />
       <Tabs.Screen
@@ -47,6 +50,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="wallet" color={color} size={size} />
           ),
+          headerRight: () => <ScreenshotCaptureButton screenName="budgets" />,
         }}
       />
       <Tabs.Screen
@@ -56,6 +60,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="chart-pie" color={color} size={size} />
           ),
+          headerRight: () => <ScreenshotCaptureButton screenName="reports" />,
         }}
       />
       <Tabs.Screen

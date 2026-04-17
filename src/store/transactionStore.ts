@@ -1,20 +1,12 @@
 import { create } from 'zustand';
-import { Transaction, TxnType } from '../types';
+import { Transaction } from '../types';
 import * as dao from '../db/transactions';
 
 interface TransactionStore {
   items: Transaction[];
   loading: boolean;
   load: () => Promise<void>;
-  add: (input: {
-    amount: number;
-    type: TxnType;
-    date: number;
-    note: string | null;
-    account_id: string | null;
-    category_id: string | null;
-    receipt_image: string | null;
-  }) => Promise<Transaction>;
+  add: (input: dao.CreateTransactionInput) => Promise<Transaction>;
   update: (row: Transaction) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }

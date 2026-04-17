@@ -8,10 +8,12 @@
     "scheme": "finance",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -21,6 +23,14 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.hajzerbela.finance"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow Budget to use speech recognition for voice input.",
+        "NSMicrophoneUsageDescription": "Allow Budget to access your microphone for voice input."
+      }
     },
     "web": {
       "output": "static",
@@ -42,17 +52,20 @@
       ],
       "expo-sqlite",
       [
-        "expo-camera",
+        "expo-speech-recognition",
         {
-          "cameraPermission": "Allow Budget to use the camera to scan receipts."
+          "microphonePermission": "Allow Budget to access your microphone for voice input.",
+          "speechRecognitionPermission": "Allow Budget to use speech recognition for voice input."
         }
       ],
       [
-        "expo-image-picker",
+        "@react-native-google-signin/google-signin",
         {
-          "photosPermission": "Allow Budget to access your photos to pick receipt images."
+          "webClientId": "$EXPO_PUBLIC_WEB_CLIENT_ID"
         }
-      ]
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
     ],
     "experiments": {
       "typedRoutes": true,
