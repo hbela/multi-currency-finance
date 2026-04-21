@@ -75,7 +75,7 @@ export default function BudgetsScreen() {
               categories={categories}
               value={categoryId}
               onChange={setCategoryId}
-              type="expense"
+              type="EXPENSE"
             />
             <AmountInput value={amount} onChangeText={setAmount} currency={currency} label="Monthly limit" />
           </Dialog.Content>

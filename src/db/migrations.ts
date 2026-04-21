@@ -1,6 +1,6 @@
 import { db } from './db';
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 6;
 
 export const runMigrations = async (): Promise<void> => {
   await db.execAsync(`
@@ -159,6 +159,152 @@ export const runMigrations = async (): Promise<void> => {
       CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
       CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category_id);
     `);
+  }
+
+  if (current < 5) {
+    // Widen categories.type CHECK to allow all TxnType values.
+    // Use legacy_alter_table so the RENAME doesn't rewrite FK references
+    // in other tables (e.g. transactions.category_id → categories_v4).
+    await db.execAsync(`PRAGMA foreign_keys = OFF;`);
+    await db.execAsync(`PRAGMA legacy_alter_table = ON;`);
+    await db.execAsync(`DROP TABLE IF EXISTS categories_v4;`);
+    await db.execAsync(`ALTER TABLE categories RENAME TO categories_v4;`);
+    await db.execAsync(`
+      CREATE TABLE categories (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        icon TEXT,
+        type TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+    `);
+    await db.runAsync(
+      `INSERT INTO categories (id, name, icon, type, created_at)
+       SELECT id, name, icon, type, created_at FROM categories_v4;`
+    );
+    await db.execAsync(`DROP TABLE categories_v4;`);
+    await db.execAsync(`PRAGMA legacy_alter_table = OFF;`);
+    await db.execAsync(`PRAGMA foreign_keys = ON;`);
+  }
+
+  if (current < 6) {
+    // Overhaul: unified multi-currency transaction model + account balance fields.
+    // Drop recurring_transactions (recurring now lives inside transactions).
+    await db.execAsync(`PRAGMA foreign_keys = OFF;`);
+    await db.execAsync(`PRAGMA legacy_alter_table = ON;`);
+
+    // Recreate transactions with new schema
+    await db.execAsync(`DROP TABLE IF EXISTS transactions_v5;`);
+    await db.execAsync(`ALTER TABLE transactions RENAME TO transactions_v5;`);
+    await db.execAsync(`
+      CREATE TABLE transactions (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        date INTEGER NOT NULL,
+        amount TEXT NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'HUF',
+        amountBase TEXT NOT NULL DEFAULT '0',
+        baseCurrency TEXT NOT NULL DEFAULT 'HUF',
+        exchangeRate TEXT NOT NULL DEFAULT '1',
+        accountId TEXT,
+        categoryId TEXT,
+        relatedTransactionId TEXT,
+        description TEXT,
+        source TEXT,
+        tags TEXT,
+        notes TEXT,
+        details TEXT,
+        isRecurring INTEGER NOT NULL DEFAULT 0,
+        recurringRule TEXT,
+        recurringParentId TEXT,
+        status TEXT NOT NULL DEFAULT 'cleared',
+        createdAt INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL,
+        FOREIGN KEY(accountId) REFERENCES accounts(id) ON DELETE SET NULL,
+        FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL
+      );
+    `);
+
+    // Migrate old rows: map old type values to new TransactionType
+    await db.execAsync(`
+      INSERT INTO transactions (
+        id, type, date, amount, currency, amountBase, baseCurrency, exchangeRate,
+        accountId, categoryId, relatedTransactionId, description, source, tags, notes,
+        details, isRecurring, recurringRule, recurringParentId, status, createdAt, updatedAt
+      )
+      SELECT
+        id,
+        CASE type
+          WHEN 'income'       THEN 'INCOME'
+          WHEN 'expense'      THEN 'EXPENSE'
+          WHEN 'transfer'     THEN 'TRANSFER'
+          WHEN 'investment'   THEN 'INVESTMENT_BUY'
+          WHEN 'debt'         THEN 'LOAN_RECEIVED'
+          WHEN 'subscription' THEN 'EXPENSE'
+          ELSE 'EXPENSE'
+        END,
+        date,
+        CAST(amount AS TEXT),
+        COALESCE(currency, 'HUF'),
+        CAST(amount AS TEXT),
+        'HUF',
+        COALESCE(CAST(exchange_rate AS TEXT), '1'),
+        account_id,
+        category_id,
+        NULL,
+        note,
+        source,
+        NULL,
+        NULL,
+        json_object(
+          'merchant', merchant, 'payer', payer, 'counterparty', counterparty,
+          'reference', reference, 'fee', fee, 'security_name', security_name,
+          'symbol', symbol, 'quantity', quantity, 'price', price,
+          'order_type', order_type, 'creditor', creditor, 'debt_type', debt_type,
+          'interest_rate', interest_rate, 'remaining_term', remaining_term,
+          'provider', provider, 'plan', plan
+        ),
+        0,
+        NULL,
+        NULL,
+        'cleared',
+        created_at,
+        created_at
+      FROM transactions_v5;
+    `);
+
+    await db.execAsync(`DROP TABLE transactions_v5;`);
+
+    // Upgrade accounts: add balance and metadata columns
+    await db.execAsync(`
+      ALTER TABLE accounts ADD COLUMN balance TEXT NOT NULL DEFAULT '0';
+      ALTER TABLE accounts ADD COLUMN isActive INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE accounts ADD COLUMN icon TEXT;
+      ALTER TABLE accounts ADD COLUMN color TEXT;
+      ALTER TABLE accounts ADD COLUMN notes TEXT;
+    `);
+
+    // Upgrade categories: add isDefault and parentId
+    await db.execAsync(`
+      ALTER TABLE categories ADD COLUMN isDefault INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE categories ADD COLUMN parentId TEXT;
+    `);
+
+    // Drop old recurring_transactions table (recurring is now in transactions)
+    await db.execAsync(`DROP TABLE IF EXISTS recurring_transactions;`);
+
+    // Recreate indexes
+    await db.execAsync(`
+      DROP INDEX IF EXISTS idx_transactions_date;
+      DROP INDEX IF EXISTS idx_transactions_category;
+      CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date DESC);
+      CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
+      CREATE INDEX IF NOT EXISTS idx_transactions_accountId ON transactions(accountId);
+      CREATE INDEX IF NOT EXISTS idx_transactions_categoryId ON transactions(categoryId);
+    `);
+
+    await db.execAsync(`PRAGMA legacy_alter_table = OFF;`);
+    await db.execAsync(`PRAGMA foreign_keys = ON;`);
   }
 
   await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION};`);

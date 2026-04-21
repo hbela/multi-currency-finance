@@ -6,9 +6,11 @@ interface AccountStore {
   items: Account[];
   loading: boolean;
   load: () => Promise<void>;
-  add: (input: { name: string; type: AccountType; currency: string }) => Promise<Account>;
+  add: (input: { name: string; type: AccountType; currency: string; icon?: string | null; color?: string | null; notes?: string | null }) => Promise<Account>;
   update: (row: Account) => Promise<void>;
   remove: (id: string) => Promise<void>;
+  deactivate: (id: string) => Promise<void>;
+  getNetWorth: () => number;
 }
 
 export const useAccountStore = create<AccountStore>((set, get) => ({
@@ -31,5 +33,12 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
   remove: async (id) => {
     await dao.deleteAccount(id);
     set({ items: get().items.filter((a) => a.id !== id) });
+  },
+  deactivate: async (id) => {
+    await dao.deactivateAccount(id);
+    set({ items: get().items.filter((a) => a.id !== id) });
+  },
+  getNetWorth: () => {
+    return get().items.reduce((sum, a) => sum + parseFloat(a.balance || '0'), 0);
   },
 }));

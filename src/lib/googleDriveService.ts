@@ -1,4 +1,5 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as FileSystem from 'expo-file-system/legacy';
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
@@ -29,18 +30,33 @@ async function uploadFile(
 ): Promise<{ id: string; webViewLink?: string }> {
   const accessToken = await getAccessToken();
 
-  const metadata = JSON.stringify({ name: fileName, mimeType });
+  const base64 = await FileSystem.readAsStringAsync(fileUri, {
+    encoding: 'base64',
+  });
 
-  const body = new FormData();
-  body.append('metadata', new Blob([metadata], { type: 'application/json' }));
-  body.append('file', { uri: fileUri, name: fileName, type: mimeType } as unknown as Blob);
+  const boundary = 'finance_upload_boundary';
+  const metadataJson = JSON.stringify({ name: fileName, mimeType });
+
+  const bodyParts = [
+    `--${boundary}\r\n`,
+    `Content-Type: application/json; charset=UTF-8\r\n\r\n`,
+    `${metadataJson}\r\n`,
+    `--${boundary}\r\n`,
+    `Content-Type: ${mimeType}\r\n`,
+    `Content-Transfer-Encoding: base64\r\n\r\n`,
+    `${base64}\r\n`,
+    `--${boundary}--`,
+  ].join('');
 
   const response = await fetch(
     'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': `multipart/related; boundary=${boundary}`,
+      },
+      body: bodyParts,
     },
   );
 

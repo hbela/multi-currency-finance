@@ -14,15 +14,15 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ScreenshotProvider } from '@/src/context/ScreenshotContext';
+import ScreenshotStatusSnackbar from '@/src/components/ScreenshotStatusSnackbar';
 import { runMigrations } from '@/src/db/migrations';
 import { seedIfEmpty } from '@/src/db/seed';
 import { useAccountStore } from '@/src/store/accountStore';
 import { useCategoryStore } from '@/src/store/categoryStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { useBudgetStore } from '@/src/store/budgetStore';
-import { useRecurringStore } from '@/src/store/recurringStore';
 import { useThemeStore } from '@/src/store/themeStore';
-import { processDueRecurring } from '@/src/db/recurring';
+import { processRecurringTransactions } from '@/src/db/transactions';
 import { darkTheme, lightTheme } from '@/src/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -48,13 +48,12 @@ export default function RootLayout() {
       try {
         await runMigrations();
         await seedIfEmpty();
-        await processDueRecurring();
+        await processRecurringTransactions();
         await Promise.all([
           useAccountStore.getState().load(),
           useCategoryStore.getState().load(),
           useTransactionStore.getState().load(),
           useBudgetStore.getState().load(),
-          useRecurringStore.getState().load(),
           useThemeStore.getState().load(),
         ]);
       } finally {
@@ -86,17 +85,9 @@ export default function RootLayout() {
               name="transaction/[id]"
               options={{ presentation: 'modal', title: 'Edit transaction' }}
             />
-            <Stack.Screen name="recurring/index" options={{ title: 'Recurring' }} />
-            <Stack.Screen
-              name="recurring/new"
-              options={{ presentation: 'modal', title: 'New recurring' }}
-            />
-            <Stack.Screen
-              name="recurring/[id]"
-              options={{ presentation: 'modal', title: 'Edit recurring' }}
-            />
           </Stack>
           <StatusBar style="auto" />
+          <ScreenshotStatusSnackbar />
         </ThemeProvider>
         </ScreenshotProvider>
       </PaperProvider>

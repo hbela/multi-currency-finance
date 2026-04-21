@@ -17,6 +17,11 @@ export interface CapturedScreenshot {
   capturedAt: number;
 }
 
+export type ScreenshotStatus =
+  | { kind: 'idle' }
+  | { kind: 'success'; message: string }
+  | { kind: 'error'; message: string };
+
 interface ScreenshotContextType {
   selectedDevice: DeviceType;
   setSelectedDevice: (d: DeviceType) => void;
@@ -26,6 +31,8 @@ interface ScreenshotContextType {
   captureCurrentScreen: (screenName?: string) => Promise<void>;
   uploadAllToGoogleDrive: () => Promise<void>;
   clearAllScreenshots: () => void;
+  status: ScreenshotStatus;
+  dismissStatus: () => void;
 }
 
 const ScreenshotContext = createContext<ScreenshotContextType | null>(null);
@@ -35,16 +42,22 @@ export function ScreenshotProvider({ children }: { children: React.ReactNode }) 
   const [capturedScreenshots, setCapturedScreenshots] = useState<CapturedScreenshot[]>([]);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [status, setStatus] = useState<ScreenshotStatus>({ kind: 'idle' });
 
   const captureCurrentScreen = useCallback(async (screenName = 'screen') => {
     setIsCapturing(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      const uri = await captureScreen({ format: 'png', quality: 1 });
-      setCapturedScreenshots((prev) => [
-        ...prev,
-        { uri, screenName, device: selectedDevice, capturedAt: Date.now() },
-      ]);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const uri = await captureScreen({ format: 'png', quality: 1, result: 'tmpfile' });
+      setCapturedScreenshots((prev) => {
+        const next = [...prev, { uri, screenName, device: selectedDevice, capturedAt: Date.now() }];
+        setStatus({ kind: 'success', message: `Captured ${screenName} (${next.length} total)` });
+        return next;
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[screenshot] capture failed', err);
+      setStatus({ kind: 'error', message: `Capture failed: ${message}` });
     } finally {
       setIsCapturing(false);
     }
@@ -60,6 +73,14 @@ export function ScreenshotProvider({ children }: { children: React.ReactNode }) 
           return uploadImageToGoogleDrive(s.uri, fileName);
         }),
       );
+      setStatus({
+        kind: 'success',
+        message: `Uploaded ${capturedScreenshots.length} screenshot(s) to Drive`,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[screenshot] upload failed', err);
+      setStatus({ kind: 'error', message: `Upload failed: ${message}` });
     } finally {
       setIsUploading(false);
     }
@@ -68,6 +89,8 @@ export function ScreenshotProvider({ children }: { children: React.ReactNode }) 
   const clearAllScreenshots = useCallback(() => {
     setCapturedScreenshots([]);
   }, []);
+
+  const dismissStatus = useCallback(() => setStatus({ kind: 'idle' }), []);
 
   return (
     <ScreenshotContext.Provider
@@ -80,6 +103,8 @@ export function ScreenshotProvider({ children }: { children: React.ReactNode }) 
         captureCurrentScreen,
         uploadAllToGoogleDrive,
         clearAllScreenshots,
+        status,
+        dismissStatus,
       }}>
       {children}
     </ScreenshotContext.Provider>

@@ -1,19 +1,20 @@
 export type Translations = {
   txn: {
-    types: { expense: string; income: string; transfer: string; investment: string; debt: string; subscription: string };
-    fields: {
-      amount: string; note: string; category: string; account: string; date: string;
-      currency: string; exchangeRate: string; originalAmount: string; originalCurrency: string;
-      merchant: string; isReimbursable: string;
-      source: string; payer: string; isTaxable: string;
-      counterparty: string; reference: string; fee: string;
-      securityName: string; symbol: string; quantity: string; price: string; orderType: string;
-      creditor: string; debtType: string; interestRate: string; remainingTerm: string;
-      provider: string; plan: string; nextBillingDate: string; isAutoRenew: string;
+    types: {
+      EXPENSE: string; INCOME: string; TRANSFER: string;
+      INVESTMENT_BUY: string; INVESTMENT_SELL: string;
+      LOAN_RECEIVED: string; LOAN_REPAYMENT: string;
+      DIVIDEND: string; INTEREST: string; CREDIT_CARD_PAYMENT: string;
     };
-    sections: { details: string; financialAccuracy: string };
-    orderType: { buy: string; sell: string };
-    debtType: { loan: string; credit_card: string; mortgage: string };
+    fields: {
+      amount: string; description: string; notes: string; category: string; account: string; date: string;
+      currency: string; exchangeRate: string; amountBase: string;
+      source: string;
+      counterparty: string; reference: string; fee: string;
+      securityName: string; symbol: string; quantity: string; price: string;
+      creditor: string; interestRate: string; remainingTerm: string;
+    };
+    sections: { details: string; currency: string };
   };
   form: { save: string; delete: string; addTransaction: string; saveChanges: string };
   settings: {
@@ -33,57 +34,42 @@ export type Translations = {
 const en: Translations = {
   txn: {
     types: {
-      expense: 'Expense',
-      income: 'Income',
-      transfer: 'Transfer',
-      investment: 'Investment',
-      debt: 'Debt',
-      subscription: 'Subscription',
+      EXPENSE: 'Expense',
+      INCOME: 'Income',
+      TRANSFER: 'Transfer',
+      INVESTMENT_BUY: 'Buy',
+      INVESTMENT_SELL: 'Sell',
+      LOAN_RECEIVED: 'Loan received',
+      LOAN_REPAYMENT: 'Loan repayment',
+      DIVIDEND: 'Dividend',
+      INTEREST: 'Interest',
+      CREDIT_CARD_PAYMENT: 'Card payment',
     },
     fields: {
       amount: 'Amount',
-      note: 'Note',
+      description: 'Description',
+      notes: 'Notes',
       category: 'Category',
       account: 'Account',
       date: 'Date',
       currency: 'Currency',
       exchangeRate: 'Exchange rate',
-      originalAmount: 'Original amount',
-      originalCurrency: 'Original currency',
-      merchant: 'Merchant',
-      isReimbursable: 'Reimbursable',
-      source: 'Source',
-      payer: 'Payer',
-      isTaxable: 'Taxable',
+      amountBase: 'Base amount',
+      source: 'Source / merchant',
       counterparty: 'Counterparty',
       reference: 'Reference',
       fee: 'Fee',
       securityName: 'Security name',
-      symbol: 'Symbol',
+      symbol: 'Symbol / ticker',
       quantity: 'Quantity',
       price: 'Price',
-      orderType: 'Order type',
-      creditor: 'Creditor',
-      debtType: 'Debt type',
+      creditor: 'Creditor / lender',
       interestRate: 'Interest rate (%)',
       remainingTerm: 'Remaining term (months)',
-      provider: 'Provider',
-      plan: 'Plan',
-      nextBillingDate: 'Next billing date (YYYY-MM-DD)',
-      isAutoRenew: 'Auto-renew',
     },
     sections: {
       details: 'Details',
-      financialAccuracy: 'Financial accuracy',
-    },
-    orderType: {
-      buy: 'Buy',
-      sell: 'Sell',
-    },
-    debtType: {
-      loan: 'Loan',
-      credit_card: 'Credit card',
-      mortgage: 'Mortgage',
+      currency: 'Currency & exchange rate',
     },
   },
   form: {
@@ -109,7 +95,7 @@ const en: Translations = {
     categoryName: 'Name',
     automation: 'Automation',
     recurringTransactions: 'Recurring transactions',
-    recurringNone: 'No rules yet',
+    recurringNone: 'No recurring rules yet',
     recurringActive: '{{active}} active · {{total}} total',
     data: 'Data',
     exportDb: 'Export database',
@@ -123,7 +109,7 @@ const en: Translations = {
     clear: 'Clear',
     language: 'Language',
     languageLabel: 'App language',
-    version: 'Budget · v1.0 · offline',
+    version: 'FlexFinance · v2.0 · offline',
   },
   common: {
     cancel: 'Cancel',

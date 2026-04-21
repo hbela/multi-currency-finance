@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleProp, ViewStyle } from 'react-native';
 import { TextInput } from 'react-native-paper';
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
   currency?: string;
   label?: string;
   autoFocus?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const AmountInput: React.FC<Props> = ({
@@ -15,6 +17,7 @@ export const AmountInput: React.FC<Props> = ({
   currency = 'USD',
   label = 'Amount',
   autoFocus,
+  style,
 }) => {
   const handle = (text: string) => {
     const cleaned = text.replace(/[^0-9.,]/g, '').replace(',', '.');
@@ -31,6 +34,7 @@ export const AmountInput: React.FC<Props> = ({
       keyboardType="decimal-pad"
       autoFocus={autoFocus}
       left={<TextInput.Affix text={currency} />}
+      style={style}
     />
   );
 };

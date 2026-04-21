@@ -1,15 +1,16 @@
 import { create } from 'zustand';
-import { Category, TxnType } from '../types';
+import { Category, TransactionType } from '../types';
 import * as dao from '../db/categories';
 
 interface CategoryStore {
   items: Category[];
   loading: boolean;
   load: () => Promise<void>;
-  add: (input: { name: string; icon: string | null; type: TxnType }) => Promise<Category>;
+  add: (input: { name: string; icon: string | null; type: TransactionType }) => Promise<Category>;
   update: (row: Category) => Promise<void>;
   remove: (id: string) => Promise<void>;
   byId: (id: string | null) => Category | undefined;
+  byType: (type: TransactionType) => Category[];
 }
 
 export const useCategoryStore = create<CategoryStore>((set, get) => ({
@@ -34,4 +35,5 @@ export const useCategoryStore = create<CategoryStore>((set, get) => ({
     set({ items: get().items.filter((c) => c.id !== id) });
   },
   byId: (id) => (id ? get().items.find((c) => c.id === id) : undefined),
+  byType: (type) => get().items.filter((c) => c.type === type),
 }));

@@ -1,12 +1,43 @@
-export type AccountType = 'cash' | 'bank' | 'card';
+export type AccountType = 'cash' | 'bank' | 'card' | 'crypto' | 'loan' | 'investment';
+
+export type TransactionType =
+  | 'EXPENSE'
+  | 'INCOME'
+  | 'TRANSFER'
+  | 'INVESTMENT_BUY'
+  | 'INVESTMENT_SELL'
+  | 'LOAN_RECEIVED'
+  | 'LOAN_REPAYMENT'
+  | 'DIVIDEND'
+  | 'INTEREST'
+  | 'CREDIT_CARD_PAYMENT';
+
+/** @deprecated Use TransactionType instead */
 export type TxnType = 'income' | 'expense' | 'transfer' | 'investment' | 'debt' | 'subscription';
-export type RecurringFrequency = 'weekly' | 'monthly' | 'yearly';
+
+export type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+export type TransactionStatus = 'pending' | 'cleared' | 'reconciled';
+
+export interface RecurringRule {
+  frequency: RecurringFrequency;
+  interval: number;
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+  endDate?: string;
+  lastGeneratedDate?: string;
+}
 
 export interface Account {
   id: string;
   name: string;
   type: AccountType;
   currency: string;
+  balance: string;
+  isActive: number;
+  icon: string | null;
+  color: string | null;
+  notes: string | null;
   created_at: number;
 }
 
@@ -14,52 +45,35 @@ export interface Category {
   id: string;
   name: string;
   icon: string | null;
-  type: TxnType;
+  type: TransactionType;
+  isDefault: number;
+  parentId: string | null;
   created_at: number;
 }
 
 export interface Transaction {
   id: string;
-  amount: number;
-  type: TxnType;
+  type: TransactionType;
   date: number;
-  note: string | null;
-  account_id: string | null;
-  category_id: string | null;
-  receipt_image: string | null;
-  created_at: number;
-  // Financial accuracy (all types)
-  currency: string | null;
-  exchange_rate: number | null;
-  original_amount: number | null;
-  original_currency: string | null;
-  // Expense
-  merchant: string | null;
-  is_reimbursable: 0 | 1 | null;
-  // Income
+  amount: string;
+  currency: string;
+  amountBase: string;
+  baseCurrency: string;
+  exchangeRate: string;
+  accountId: string | null;
+  categoryId: string | null;
+  relatedTransactionId: string | null;
+  description: string | null;
   source: string | null;
-  payer: string | null;
-  is_taxable: 0 | 1 | null;
-  // Transfer
-  counterparty: string | null;
-  reference: string | null;
-  fee: number | null;
-  // Investment
-  security_name: string | null;
-  symbol: string | null;
-  quantity: number | null;
-  price: number | null;
-  order_type: string | null;
-  // Debt
-  creditor: string | null;
-  debt_type: string | null;
-  interest_rate: number | null;
-  remaining_term: number | null;
-  // Subscription
-  provider: string | null;
-  plan: string | null;
-  next_billing_date: number | null;
-  is_auto_renew: 0 | 1 | null;
+  tags: string | null;
+  notes: string | null;
+  details: string | null;
+  isRecurring: number;
+  recurringRule: string | null;
+  recurringParentId: string | null;
+  status: TransactionStatus;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface Budget {
@@ -67,22 +81,6 @@ export interface Budget {
   category_id: string;
   amount: number;
   month: string;
-  created_at: number;
-}
-
-export interface RecurringTransaction {
-  id: string;
-  amount: number;
-  type: TxnType;
-  category_id: string | null;
-  account_id: string | null;
-  note: string | null;
-  frequency: RecurringFrequency;
-  start_date: number;
-  next_due_date: number;
-  end_date: number | null;
-  last_run_date: number | null;
-  active: number;
   created_at: number;
 }
 
@@ -96,4 +94,33 @@ export interface BudgetProgress {
   spent: number;
   remaining: number;
   percent: number;
+}
+
+export interface MonthlySummary {
+  income: number;
+  expense: number;
+  net: number;
+}
+
+export interface CategorySpending {
+  categoryId: string;
+  categoryName: string;
+  total: number;
+}
+
+export interface InvestmentHolding {
+  symbol: string;
+  name: string;
+  quantity: number;
+  avgPrice: number;
+  currency: string;
+}
+
+export interface TransactionFilters {
+  type?: TransactionType;
+  accountId?: string;
+  categoryId?: string;
+  dateFrom?: number;
+  dateTo?: number;
+  search?: string;
 }

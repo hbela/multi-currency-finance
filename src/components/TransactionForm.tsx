@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  Button,
-  Card,
-  SegmentedButtons,
-  Switch,
-  Text,
-  TextInput,
-} from 'react-native-paper';
+import { Button, Card, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 
 import { AmountInput } from './AmountInput';
@@ -17,45 +10,24 @@ import { AccountPicker } from './AccountPicker';
 import { DictationButton } from './DictationButton';
 import { useAccountStore } from '../store/accountStore';
 import { useCategoryStore } from '../store/categoryStore';
-import { Transaction, TxnType } from '../types';
+import { Transaction, TransactionType } from '../types';
 import { useAppTheme } from '../theme';
+import { CreateTransactionInput } from '../db/transactions';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const BASE_CURRENCY = 'HUF';
+
+const ALL_TYPES: TransactionType[] = [
+  'EXPENSE', 'INCOME', 'TRANSFER',
+  'INVESTMENT_BUY', 'INVESTMENT_SELL',
+  'LOAN_RECEIVED', 'LOAN_REPAYMENT',
+  'DIVIDEND', 'INTEREST', 'CREDIT_CARD_PAYMENT',
+];
 
 // ─── Form value shape ─────────────────────────────────────────────────────────
 
-export interface TransactionFormValues {
-  amount: number;
-  type: TxnType;
-  date: number;
-  note: string | null;
-  account_id: string | null;
-  category_id: string | null;
-  receipt_image: string | null;
-  currency: string | null;
-  exchange_rate: number | null;
-  original_amount: number | null;
-  original_currency: string | null;
-  merchant: string | null;
-  is_reimbursable: 0 | 1 | null;
-  source: string | null;
-  payer: string | null;
-  is_taxable: 0 | 1 | null;
-  counterparty: string | null;
-  reference: string | null;
-  fee: number | null;
-  security_name: string | null;
-  symbol: string | null;
-  quantity: number | null;
-  price: number | null;
-  order_type: string | null;
-  creditor: string | null;
-  debt_type: string | null;
-  interest_rate: number | null;
-  remaining_term: number | null;
-  provider: string | null;
-  plan: string | null;
-  next_billing_date: number | null;
-  is_auto_renew: 0 | 1 | null;
-}
+export type TransactionFormValues = CreateTransactionInput;
 
 interface Props {
   initial?: Transaction;
@@ -66,27 +38,12 @@ interface Props {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const parseNum = (s: string): number | null => {
-  const n = parseFloat(s);
-  return Number.isFinite(n) ? n : null;
+const parseDetails = (raw: string | null): Record<string, unknown> => {
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return {}; }
 };
 
-const epochToDateStr = (ms: number | null): string => {
-  if (!ms) return '';
-  const d = new Date(ms);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-};
-
-const dateStrToEpoch = (s: string): number | null => {
-  if (!s.match(/^\d{4}-\d{2}-\d{2}$/)) return null;
-  const ms = new Date(s).getTime();
-  return Number.isFinite(ms) ? ms : null;
-};
-
-// ─── Labelled text row with optional DictationButton ─────────────────────────
+// ─── Shared TextRow ───────────────────────────────────────────────────────────
 
 interface TextRowProps {
   label: string;
@@ -115,56 +72,59 @@ const TextRow: React.FC<TextRowProps> = ({ label, value, onChange, dictId, numer
   </View>
 );
 
-// ─── Type-specific sections ───────────────────────────────────────────────────
+// ─── Type-specific detail sections ───────────────────────────────────────────
 
-interface ExpenseSectionProps {
-  merchant: string; setMerchant: (v: string) => void;
-  isReimbursable: boolean; setIsReimbursable: (v: boolean) => void;
+interface InvestmentDetailsProps {
+  securityName: string; setSecurityName: (v: string) => void;
+  symbol: string; setSymbol: (v: string) => void;
+  quantity: string; setQuantity: (v: string) => void;
+  price: string; setPrice: (v: string) => void;
+  fee: string; setFee: (v: string) => void;
 }
-const ExpenseSection: React.FC<ExpenseSectionProps> = ({ merchant, setMerchant, isReimbursable, setIsReimbursable }) => {
+const InvestmentDetails: React.FC<InvestmentDetailsProps> = ({
+  securityName, setSecurityName, symbol, setSymbol,
+  quantity, setQuantity, price, setPrice, fee, setFee,
+}) => {
   const { t } = useTranslation();
   return (
     <Card>
       <Card.Title title={t('txn.sections.details')} />
       <Card.Content style={{ gap: 12 }}>
-        <TextRow label={t('txn.fields.merchant')} value={merchant} onChange={setMerchant} dictId="merchant" />
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text>{t('txn.fields.isReimbursable')}</Text>
-          <Switch value={isReimbursable} onValueChange={setIsReimbursable} />
-        </View>
+        <TextRow label={t('txn.fields.securityName')} value={securityName} onChange={setSecurityName} dictId="security_name" />
+        <TextRow label={t('txn.fields.symbol')} value={symbol} onChange={setSymbol} dictId="symbol" />
+        <TextRow label={t('txn.fields.quantity')} value={quantity} onChange={setQuantity} dictId="quantity" numeric />
+        <TextRow label={t('txn.fields.price')} value={price} onChange={setPrice} dictId="price" numeric />
+        <TextRow label={t('txn.fields.fee')} value={fee} onChange={setFee} dictId="fee" numeric />
       </Card.Content>
     </Card>
   );
 };
 
-interface IncomeSectionProps {
-  source: string; setSource: (v: string) => void;
-  payer: string; setPayer: (v: string) => void;
-  isTaxable: boolean; setIsTaxable: (v: boolean) => void;
+interface LoanDetailsProps {
+  creditor: string; setCreditor: (v: string) => void;
+  interestRate: string; setInterestRate: (v: string) => void;
+  remainingTerm: string; setRemainingTerm: (v: string) => void;
 }
-const IncomeSection: React.FC<IncomeSectionProps> = ({ source, setSource, payer, setPayer, isTaxable, setIsTaxable }) => {
+const LoanDetails: React.FC<LoanDetailsProps> = ({ creditor, setCreditor, interestRate, setInterestRate, remainingTerm, setRemainingTerm }) => {
   const { t } = useTranslation();
   return (
     <Card>
       <Card.Title title={t('txn.sections.details')} />
       <Card.Content style={{ gap: 12 }}>
-        <TextRow label={t('txn.fields.source')} value={source} onChange={setSource} dictId="source" />
-        <TextRow label={t('txn.fields.payer')} value={payer} onChange={setPayer} dictId="payer" />
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text>{t('txn.fields.isTaxable')}</Text>
-          <Switch value={isTaxable} onValueChange={setIsTaxable} />
-        </View>
+        <TextRow label={t('txn.fields.creditor')} value={creditor} onChange={setCreditor} dictId="creditor" />
+        <TextRow label={t('txn.fields.interestRate')} value={interestRate} onChange={setInterestRate} dictId="interest_rate" numeric />
+        <TextRow label={t('txn.fields.remainingTerm')} value={remainingTerm} onChange={setRemainingTerm} dictId="remaining_term" numeric />
       </Card.Content>
     </Card>
   );
 };
 
-interface TransferSectionProps {
+interface TransferDetailsProps {
   counterparty: string; setCounterparty: (v: string) => void;
   reference: string; setReference: (v: string) => void;
   fee: string; setFee: (v: string) => void;
 }
-const TransferSection: React.FC<TransferSectionProps> = ({ counterparty, setCounterparty, reference, setReference, fee, setFee }) => {
+const TransferDetails: React.FC<TransferDetailsProps> = ({ counterparty, setCounterparty, reference, setReference, fee, setFee }) => {
   const { t } = useTranslation();
   return (
     <Card>
@@ -178,126 +138,51 @@ const TransferSection: React.FC<TransferSectionProps> = ({ counterparty, setCoun
   );
 };
 
-interface InvestmentSectionProps {
-  securityName: string; setSecurityName: (v: string) => void;
-  symbol: string; setSymbol: (v: string) => void;
-  quantity: string; setQuantity: (v: string) => void;
-  price: string; setPrice: (v: string) => void;
-  orderType: string; setOrderType: (v: string) => void;
-}
-const InvestmentSection: React.FC<InvestmentSectionProps> = ({
-  securityName, setSecurityName, symbol, setSymbol,
-  quantity, setQuantity, price, setPrice, orderType, setOrderType,
-}) => {
-  const { t } = useTranslation();
-  return (
-    <Card>
-      <Card.Title title={t('txn.sections.details')} />
-      <Card.Content style={{ gap: 12 }}>
-        <TextRow label={t('txn.fields.securityName')} value={securityName} onChange={setSecurityName} dictId="security_name" />
-        <TextRow label={t('txn.fields.symbol')} value={symbol} onChange={setSymbol} dictId="symbol" />
-        <TextRow label={t('txn.fields.quantity')} value={quantity} onChange={setQuantity} dictId="quantity" numeric />
-        <TextRow label={t('txn.fields.price')} value={price} onChange={setPrice} dictId="price" numeric />
-        <SegmentedButtons
-          value={orderType}
-          onValueChange={setOrderType}
-          buttons={[
-            { value: 'buy', label: t('txn.orderType.buy') },
-            { value: 'sell', label: t('txn.orderType.sell') },
-          ]}
-        />
-      </Card.Content>
-    </Card>
-  );
-};
+// ─── Multi-currency section ───────────────────────────────────────────────────
 
-interface DebtSectionProps {
-  creditor: string; setCreditor: (v: string) => void;
-  debtType: string; setDebtType: (v: string) => void;
-  interestRate: string; setInterestRate: (v: string) => void;
-  remainingTerm: string; setRemainingTerm: (v: string) => void;
+interface CurrencyRowProps {
+  currency: string; setCurrency: (v: string) => void;
+  amount: string;
+  exchangeRate: string; setExchangeRate: (v: string) => void;
+  amountBase: string;
 }
-const DebtSection: React.FC<DebtSectionProps> = ({ creditor, setCreditor, debtType, setDebtType, interestRate, setInterestRate, remainingTerm, setRemainingTerm }) => {
+const CurrencyRow: React.FC<CurrencyRowProps> = ({ currency, setCurrency, amount, exchangeRate, setExchangeRate, amountBase }) => {
   const { t } = useTranslation();
   return (
     <Card>
-      <Card.Title title={t('txn.sections.details')} />
+      <Card.Title title={t('txn.sections.currency')} />
       <Card.Content style={{ gap: 12 }}>
-        <TextRow label={t('txn.fields.creditor')} value={creditor} onChange={setCreditor} dictId="creditor" />
-        <SegmentedButtons
-          value={debtType}
-          onValueChange={setDebtType}
-          buttons={[
-            { value: 'loan', label: t('txn.debtType.loan') },
-            { value: 'credit_card', label: t('txn.debtType.credit_card') },
-            { value: 'mortgage', label: t('txn.debtType.mortgage') },
-          ]}
-        />
-        <TextRow label={t('txn.fields.interestRate')} value={interestRate} onChange={setInterestRate} dictId="interest_rate" numeric />
-        <TextRow label={t('txn.fields.remainingTerm')} value={remainingTerm} onChange={setRemainingTerm} dictId="remaining_term" numeric />
-      </Card.Content>
-    </Card>
-  );
-};
-
-interface SubscriptionSectionProps {
-  provider: string; setProvider: (v: string) => void;
-  plan: string; setPlan: (v: string) => void;
-  nextBillingDate: string; setNextBillingDate: (v: string) => void;
-  isAutoRenew: boolean; setIsAutoRenew: (v: boolean) => void;
-}
-const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ provider, setProvider, plan, setPlan, nextBillingDate, setNextBillingDate, isAutoRenew, setIsAutoRenew }) => {
-  const { t } = useTranslation();
-  return (
-    <Card>
-      <Card.Title title={t('txn.sections.details')} />
-      <Card.Content style={{ gap: 12 }}>
-        <TextRow label={t('txn.fields.provider')} value={provider} onChange={setProvider} dictId="provider" />
-        <TextRow label={t('txn.fields.plan')} value={plan} onChange={setPlan} dictId="plan" />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TextInput
+            mode="outlined"
+            label={t('txn.fields.currency')}
+            value={currency}
+            onChangeText={setCurrency}
+            style={{ width: 90 }}
+            autoCapitalize="characters"
+          />
+          <TextInput
+            mode="outlined"
+            label={t('txn.fields.exchangeRate')}
+            value={exchangeRate}
+            onChangeText={setExchangeRate}
+            keyboardType="decimal-pad"
+            style={{ flex: 1 }}
+          />
+        </View>
         <TextInput
           mode="outlined"
-          label={t('txn.fields.nextBillingDate')}
-          value={nextBillingDate}
-          onChangeText={setNextBillingDate}
-          placeholder="YYYY-MM-DD"
-          keyboardType="numeric"
+          label={`${t('txn.fields.amountBase')} (${BASE_CURRENCY})`}
+          value={amountBase}
+          editable={false}
+          style={{ backgroundColor: 'transparent' }}
         />
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text>{t('txn.fields.isAutoRenew')}</Text>
-          <Switch value={isAutoRenew} onValueChange={setIsAutoRenew} />
-        </View>
-      </Card.Content>
-    </Card>
-  );
-};
-
-interface FinancialAccuracySectionProps {
-  currency: string; setCurrency: (v: string) => void;
-  exchangeRate: string; setExchangeRate: (v: string) => void;
-  originalAmount: string; setOriginalAmount: (v: string) => void;
-  originalCurrency: string; setOriginalCurrency: (v: string) => void;
-}
-const FinancialAccuracySection: React.FC<FinancialAccuracySectionProps> = ({
-  currency, setCurrency, exchangeRate, setExchangeRate,
-  originalAmount, setOriginalAmount, originalCurrency, setOriginalCurrency,
-}) => {
-  const { t } = useTranslation();
-  return (
-    <Card>
-      <Card.Title title={t('txn.sections.financialAccuracy')} />
-      <Card.Content style={{ gap: 12 }}>
-        <TextRow label={t('txn.fields.currency')} value={currency} onChange={setCurrency} dictId="fx-currency" />
-        <TextRow label={t('txn.fields.exchangeRate')} value={exchangeRate} onChange={setExchangeRate} dictId="fx-rate" numeric />
-        <TextRow label={t('txn.fields.originalAmount')} value={originalAmount} onChange={setOriginalAmount} dictId="fx-orig-amount" numeric />
-        <TextRow label={t('txn.fields.originalCurrency')} value={originalCurrency} onChange={setOriginalCurrency} dictId="fx-orig-currency" />
       </Card.Content>
     </Card>
   );
 };
 
 // ─── Main form ────────────────────────────────────────────────────────────────
-
-const ALL_TYPES: TxnType[] = ['expense', 'income', 'transfer', 'investment', 'debt', 'subscription'];
 
 export const TransactionForm: React.FC<Props> = ({
   initial,
@@ -311,91 +196,83 @@ export const TransactionForm: React.FC<Props> = ({
   const accounts = useAccountStore((s) => s.items);
   const categories = useCategoryStore((s) => s.items);
 
-  const [type, setType] = useState<TxnType>(initial?.type ?? 'expense');
-  const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
-  const [note, setNote] = useState(initial?.note ?? '');
-  const [date] = useState<number>(initial?.date ?? Date.now());
-  const [accountId, setAccountId] = useState<string | null>(
-    initial?.account_id ?? accounts[0]?.id ?? null
-  );
-  const [categoryId, setCategoryId] = useState<string | null>(initial?.category_id ?? null);
-  const [receiptImage] = useState<string | null>(initial?.receipt_image ?? null);
+  const initDetails = parseDetails(initial?.details ?? null);
+  const accountCurrency = accounts.find((a) => a.id === (initial?.accountId ?? accounts[0]?.id))?.currency ?? BASE_CURRENCY;
 
-  const [currency, setCurrency] = useState(initial?.currency ?? '');
-  const [exchangeRate, setExchangeRate] = useState(initial?.exchange_rate != null ? String(initial.exchange_rate) : '');
-  const [originalAmount, setOriginalAmount] = useState(initial?.original_amount != null ? String(initial.original_amount) : '');
-  const [originalCurrency, setOriginalCurrency] = useState(initial?.original_currency ?? '');
-
-  const [merchant, setMerchant] = useState(initial?.merchant ?? '');
-  const [isReimbursable, setIsReimbursable] = useState((initial?.is_reimbursable ?? 0) === 1);
-
+  const [type, setType] = useState<TransactionType>(initial?.type ?? 'EXPENSE');
+  const [amount, setAmount] = useState(initial?.amount ?? '');
+  const [currency, setCurrencyState] = useState(initial?.currency ?? accountCurrency);
+  const [exchangeRate, setExchangeRate] = useState(initial?.exchangeRate ?? '1');
+  const [accountId, setAccountId] = useState<string | null>(initial?.accountId ?? accounts[0]?.id ?? null);
+  const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
+  const [description, setDescription] = useState(initial?.description ?? '');
   const [source, setSource] = useState(initial?.source ?? '');
-  const [payer, setPayer] = useState(initial?.payer ?? '');
-  const [isTaxable, setIsTaxable] = useState((initial?.is_taxable ?? 0) === 1);
-
-  const [counterparty, setCounterparty] = useState(initial?.counterparty ?? '');
-  const [reference, setReference] = useState(initial?.reference ?? '');
-  const [fee, setFee] = useState(initial?.fee != null ? String(initial.fee) : '');
-
-  const [securityName, setSecurityName] = useState(initial?.security_name ?? '');
-  const [symbol, setSymbol] = useState(initial?.symbol ?? '');
-  const [quantity, setQuantity] = useState(initial?.quantity != null ? String(initial.quantity) : '');
-  const [price, setPrice] = useState(initial?.price != null ? String(initial.price) : '');
-  const [orderType, setOrderType] = useState(initial?.order_type ?? 'buy');
-
-  const [creditor, setCreditor] = useState(initial?.creditor ?? '');
-  const [debtType, setDebtType] = useState(initial?.debt_type ?? 'loan');
-  const [interestRate, setInterestRate] = useState(initial?.interest_rate != null ? String(initial.interest_rate) : '');
-  const [remainingTerm, setRemainingTerm] = useState(initial?.remaining_term != null ? String(initial.remaining_term) : '');
-
-  const [provider, setProvider] = useState(initial?.provider ?? '');
-  const [plan, setPlan] = useState(initial?.plan ?? '');
-  const [nextBillingDate, setNextBillingDate] = useState(epochToDateStr(initial?.next_billing_date ?? null));
-  const [isAutoRenew, setIsAutoRenew] = useState((initial?.is_auto_renew ?? 0) === 1);
-
+  const [notes, setNotes] = useState(initial?.notes ?? '');
   const [saving, setSaving] = useState(false);
 
-  const accountCurrency = accounts.find((a) => a.id === accountId)?.currency ?? 'USD';
+  // Investment fields
+  const [securityName, setSecurityName] = useState(String(initDetails.security_name ?? ''));
+  const [symbol, setSymbol] = useState(String(initDetails.symbol ?? ''));
+  const [quantity, setQuantity] = useState(initDetails.quantity != null ? String(initDetails.quantity) : '');
+  const [price, setPrice] = useState(initDetails.price != null ? String(initDetails.price) : '');
+  const [investFee, setInvestFee] = useState(initDetails.fee != null ? String(initDetails.fee) : '');
+
+  // Loan fields
+  const [creditor, setCreditor] = useState(String(initDetails.creditor ?? ''));
+  const [interestRate, setInterestRate] = useState(initDetails.interest_rate != null ? String(initDetails.interest_rate) : '');
+  const [remainingTerm, setRemainingTerm] = useState(initDetails.remaining_term != null ? String(initDetails.remaining_term) : '');
+
+  // Transfer fields
+  const [counterparty, setCounterparty] = useState(String(initDetails.counterparty ?? ''));
+  const [reference, setReference] = useState(String(initDetails.reference ?? ''));
+  const [transferFee, setTransferFee] = useState(initDetails.fee != null ? String(initDetails.fee) : '');
+
+  const isInvestment = type === 'INVESTMENT_BUY' || type === 'INVESTMENT_SELL';
+  const isLoan = type === 'LOAN_RECEIVED' || type === 'LOAN_REPAYMENT';
+  const isTransfer = type === 'TRANSFER';
+
+  const computedAmountBase = (() => {
+    const a = parseFloat(amount);
+    const r = parseFloat(exchangeRate);
+    if (!Number.isFinite(a) || !Number.isFinite(r) || r === 0) return '';
+    if (currency === BASE_CURRENCY) return String(a);
+    return String(Math.round(a * r));
+  })();
+
+  const buildDetails = (): Record<string, unknown> => {
+    if (isInvestment) {
+      return { security_name: securityName, symbol, quantity: parseFloat(quantity) || null, price: parseFloat(price) || null, fee: parseFloat(investFee) || null };
+    }
+    if (isLoan) {
+      return { creditor, interest_rate: parseFloat(interestRate) || null, remaining_term: parseInt(remainingTerm, 10) || null };
+    }
+    if (isTransfer) {
+      return { counterparty, reference, fee: parseFloat(transferFee) || null };
+    }
+    return {};
+  };
 
   const handleSubmit = async () => {
     const parsed = parseFloat(amount);
     if (!Number.isFinite(parsed) || parsed <= 0) return;
     setSaving(true);
     try {
-      const rt = parseNum(remainingTerm);
+      const amountBase = computedAmountBase || String(parsed);
       await onSubmit({
-        amount: parsed,
         type,
-        date,
-        note: note.trim() || null,
-        account_id: accountId,
-        category_id: categoryId,
-        receipt_image: receiptImage,
-        currency: currency.trim() || null,
-        exchange_rate: parseNum(exchangeRate),
-        original_amount: parseNum(originalAmount),
-        original_currency: originalCurrency.trim() || null,
-        merchant: merchant.trim() || null,
-        is_reimbursable: isReimbursable ? 1 : null,
+        date: initial?.date ?? Date.now(),
+        amount: String(parsed),
+        currency: currency.trim() || BASE_CURRENCY,
+        amountBase,
+        baseCurrency: BASE_CURRENCY,
+        exchangeRate: exchangeRate.trim() || '1',
+        accountId,
+        categoryId,
+        description: description.trim() || null,
         source: source.trim() || null,
-        payer: payer.trim() || null,
-        is_taxable: isTaxable ? 1 : null,
-        counterparty: counterparty.trim() || null,
-        reference: reference.trim() || null,
-        fee: parseNum(fee),
-        security_name: securityName.trim() || null,
-        symbol: symbol.trim() || null,
-        quantity: parseNum(quantity),
-        price: parseNum(price),
-        order_type: orderType || null,
-        creditor: creditor.trim() || null,
-        debt_type: debtType || null,
-        interest_rate: parseNum(interestRate),
-        remaining_term: rt != null ? Math.round(rt) : null,
-        provider: provider.trim() || null,
-        plan: plan.trim() || null,
-        next_billing_date: dateStrToEpoch(nextBillingDate),
-        is_auto_renew: isAutoRenew ? 1 : null,
+        notes: notes.trim() || null,
+        details: buildDetails(),
+        status: 'cleared',
       });
     } finally {
       setSaving(false);
@@ -404,88 +281,98 @@ export const TransactionForm: React.FC<Props> = ({
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 16 + insets.bottom, gap: 16 }}>
-      {/* Type selector — horizontal scroll for 6 types */}
+      {/* Type selector */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
         {ALL_TYPES.map((txnType) => (
           <Button
             key={txnType}
             mode={type === txnType ? 'contained' : 'outlined'}
-            onPress={() => setType(txnType)}
+            onPress={() => { setType(txnType); setCategoryId(null); }}
             compact>
             {t(`txn.types.${txnType}`)}
           </Button>
         ))}
       </ScrollView>
 
-      <AmountInput value={amount} onChangeText={setAmount} currency={accountCurrency} autoFocus={!initial} />
+      {/* Amount + currency side by side */}
+      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+        <AmountInput value={amount} onChangeText={setAmount} currency={currency} autoFocus={!initial} style={{ flex: 1 }} />
+        <TextInput
+          mode="outlined"
+          label={t('txn.fields.currency')}
+          value={currency}
+          onChangeText={setCurrencyState}
+          style={{ width: 80 }}
+          autoCapitalize="characters"
+        />
+      </View>
+
       <CategoryPicker categories={categories} value={categoryId} onChange={setCategoryId} type={type} />
       <AccountPicker accounts={accounts} value={accountId} onChange={setAccountId} />
 
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <TextInput
           mode="outlined"
-          label={t('txn.fields.note')}
-          value={note}
-          onChangeText={setNote}
+          label={t('txn.fields.description')}
+          value={description}
+          onChangeText={setDescription}
           style={{ flex: 1 }}
         />
         <DictationButton
-          id="note-field"
-          onDictationComplete={(text) => setNote((prev) => prev ? prev + ' ' + text : text)}
+          id="description-field"
+          onDictationComplete={(text) => setDescription((prev) => prev ? prev + ' ' + text : text)}
         />
       </View>
 
-      {type === 'expense' && (
-        <ExpenseSection
-          merchant={merchant} setMerchant={setMerchant}
-          isReimbursable={isReimbursable} setIsReimbursable={setIsReimbursable}
-        />
-      )}
-      {type === 'income' && (
-        <IncomeSection
-          source={source} setSource={setSource}
-          payer={payer} setPayer={setPayer}
-          isTaxable={isTaxable} setIsTaxable={setIsTaxable}
-        />
-      )}
-      {type === 'transfer' && (
-        <TransferSection
-          counterparty={counterparty} setCounterparty={setCounterparty}
-          reference={reference} setReference={setReference}
-          fee={fee} setFee={setFee}
-        />
-      )}
-      {type === 'investment' && (
-        <InvestmentSection
+      <TextInput
+        mode="outlined"
+        label={t('txn.fields.source')}
+        value={source}
+        onChangeText={setSource}
+      />
+
+      {/* Type-specific details */}
+      {isInvestment && (
+        <InvestmentDetails
           securityName={securityName} setSecurityName={setSecurityName}
           symbol={symbol} setSymbol={setSymbol}
           quantity={quantity} setQuantity={setQuantity}
           price={price} setPrice={setPrice}
-          orderType={orderType} setOrderType={setOrderType}
+          fee={investFee} setFee={setInvestFee}
         />
       )}
-      {type === 'debt' && (
-        <DebtSection
+      {isLoan && (
+        <LoanDetails
           creditor={creditor} setCreditor={setCreditor}
-          debtType={debtType} setDebtType={setDebtType}
           interestRate={interestRate} setInterestRate={setInterestRate}
           remainingTerm={remainingTerm} setRemainingTerm={setRemainingTerm}
         />
       )}
-      {type === 'subscription' && (
-        <SubscriptionSection
-          provider={provider} setProvider={setProvider}
-          plan={plan} setPlan={setPlan}
-          nextBillingDate={nextBillingDate} setNextBillingDate={setNextBillingDate}
-          isAutoRenew={isAutoRenew} setIsAutoRenew={setIsAutoRenew}
+      {isTransfer && (
+        <TransferDetails
+          counterparty={counterparty} setCounterparty={setCounterparty}
+          reference={reference} setReference={setReference}
+          fee={transferFee} setFee={setTransferFee}
         />
       )}
 
-      <FinancialAccuracySection
-        currency={currency} setCurrency={setCurrency}
-        exchangeRate={exchangeRate} setExchangeRate={setExchangeRate}
-        originalAmount={originalAmount} setOriginalAmount={setOriginalAmount}
-        originalCurrency={originalCurrency} setOriginalCurrency={setOriginalCurrency}
+      {/* Multi-currency */}
+      {currency !== BASE_CURRENCY && (
+        <CurrencyRow
+          currency={currency} setCurrency={setCurrencyState}
+          amount={amount}
+          exchangeRate={exchangeRate} setExchangeRate={setExchangeRate}
+          amountBase={computedAmountBase}
+        />
+      )}
+
+      <TextInput
+        mode="outlined"
+        label={t('txn.fields.notes')}
+        value={notes}
+        onChangeText={setNotes}
+        multiline
+        numberOfLines={2}
       />
 
       <View style={{ gap: 8 }}>

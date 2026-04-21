@@ -7,42 +7,39 @@ import { SummaryCard } from '@/src/components/SummaryCard';
 import { TransactionItem } from '@/src/components/TransactionItem';
 import { useAccountStore } from '@/src/store/accountStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
-import { getTotalBalance } from '@/src/db/accounts';
-import { getMonthlyTotals } from '@/src/db/transactions';
-import { monthKey } from '@/src/utils/date';
+import { getMonthlySummary } from '@/src/db/transactions';
 import { useAppTheme } from '@/src/theme';
+
+const BASE_CURRENCY = 'HUF';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const theme = useAppTheme();
   const transactions = useTransactionStore((s) => s.items);
-  const accounts = useAccountStore((s) => s.items);
-  const [balance, setBalance] = useState(0);
+  const getNetWorth = useAccountStore((s) => s.getNetWorth);
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
 
-  const currency = accounts[0]?.currency ?? 'USD';
-
   useEffect(() => {
     (async () => {
-      setBalance(await getTotalBalance());
-      const t = await getMonthlyTotals(monthKey());
-      setIncome(t.income);
-      setExpense(t.expense);
+      const now = new Date();
+      const summary = await getMonthlySummary(now.getFullYear(), now.getMonth() + 1);
+      setIncome(summary.income);
+      setExpense(summary.expense);
     })();
   }, [transactions]);
 
-  const recent = useMemo(() => transactions.slice(0, 5), [transactions]);
+  const netWorth = getNetWorth();
+  const recent = useMemo(() => transactions.slice(0, 10), [transactions]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>
-        <SummaryCard balance={balance} income={income} expense={expense} currency={currency} />
+        <SummaryCard balance={netWorth} income={income} expense={expense} currency={BASE_CURRENCY} />
         <List.Section>
           <List.Subheader>Recent transactions</List.Subheader>
           {recent.length === 0 ? (
-            <Text
-              style={{ marginHorizontal: 16, color: theme.colors.onSurfaceVariant }}>
+            <Text style={{ marginHorizontal: 16, color: theme.colors.onSurfaceVariant }}>
               No transactions yet. Tap + to add your first one.
             </Text>
           ) : (

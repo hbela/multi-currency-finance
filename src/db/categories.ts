@@ -1,25 +1,35 @@
 import { db } from './db';
-import { Category, TxnType } from '../types';
+import { Category, TransactionType } from '../types';
 import { newId } from '../utils/id';
 
 export const listCategories = (): Promise<Category[]> =>
   db.getAllAsync<Category>('SELECT * FROM categories ORDER BY type ASC, name ASC');
 
+export const listCategoriesByType = (type: TransactionType): Promise<Category[]> =>
+  db.getAllAsync<Category>(
+    'SELECT * FROM categories WHERE type = ? ORDER BY name ASC',
+    [type]
+  );
+
 export const createCategory = async (input: {
   name: string;
   icon: string | null;
-  type: TxnType;
+  type: TransactionType;
+  isDefault?: number;
+  parentId?: string | null;
 }): Promise<Category> => {
   const row: Category = {
     id: newId(),
     name: input.name,
     icon: input.icon,
     type: input.type,
+    isDefault: input.isDefault ?? 0,
+    parentId: input.parentId ?? null,
     created_at: Date.now(),
   };
   await db.runAsync(
-    'INSERT INTO categories (id, name, icon, type, created_at) VALUES (?, ?, ?, ?, ?)',
-    [row.id, row.name, row.icon, row.type, row.created_at]
+    'INSERT INTO categories (id, name, icon, type, isDefault, parentId, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [row.id, row.name, row.icon, row.type, row.isDefault, row.parentId, row.created_at]
   );
   return row;
 };

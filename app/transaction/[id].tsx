@@ -6,7 +6,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { TransactionForm } from '@/src/components/TransactionForm';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { useAppTheme } from '@/src/theme';
-import { persistReceiptImage } from '@/src/utils/receiptStorage';
 
 export default function EditTransactionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,10 +27,13 @@ export default function EditTransactionScreen() {
     <TransactionForm
       initial={transaction}
       onSubmit={async (v) => {
-        const receiptImage = v.receipt_image
-          ? persistReceiptImage(v.receipt_image, transaction.id)
-          : null;
-        await update({ ...transaction, ...v, receipt_image: receiptImage });
+        await update({
+          ...transaction,
+          ...v,
+          updatedAt: Date.now(),
+          tags: v.tags ? JSON.stringify(v.tags) : null,
+          details: v.details ? JSON.stringify(v.details) : null,
+        });
         router.back();
       }}
       onDelete={async () => {

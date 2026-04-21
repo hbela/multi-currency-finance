@@ -10,22 +10,20 @@ import {
   getCategoryBreakdown,
   getMonthlyTotalsSeries,
 } from '@/src/db/transactions';
-import { useAccountStore } from '@/src/store/accountStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { useAppTheme } from '@/src/theme';
-import { TxnType } from '@/src/types';
+import { TransactionType } from '@/src/types';
 import { monthKey, monthKeysEndingAt } from '@/src/utils/date';
 import { formatCurrency } from '@/src/utils/format';
 
 export default function ReportsScreen() {
   const theme = useAppTheme();
-  const accounts = useAccountStore((s) => s.items);
   const transactions = useTransactionStore((s) => s.items);
-  const [type, setType] = useState<TxnType>('expense');
+  const [type, setType] = useState<TransactionType>('EXPENSE');
   const [rangeMonths, setRangeMonths] = useState<6 | 12>(6);
   const [rows, setRows] = useState<CategoryBreakdownRow[]>([]);
   const [series, setSeries] = useState<MonthlySeriesPoint[]>([]);
-  const currency = accounts[0]?.currency ?? 'USD';
+  const currency = 'HUF';
   const month = monthKey();
 
   const refresh = useCallback(async () => {
@@ -113,10 +111,10 @@ export default function ReportsScreen() {
           </View>
           <SegmentedButtons
             value={type}
-            onValueChange={(v) => setType(v as TxnType)}
+            onValueChange={(v) => setType(v as TransactionType)}
             buttons={[
-              { value: 'expense', label: 'Expenses' },
-              { value: 'income', label: 'Income' },
+              { value: 'EXPENSE', label: 'Expenses' },
+              { value: 'INCOME', label: 'Income' },
             ]}
           />
           {rows.length === 0 ? (

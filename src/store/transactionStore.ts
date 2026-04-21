@@ -20,7 +20,10 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     set({ items, loading: false });
   },
   add: async (input) => {
-    const row = await dao.createTransaction(input);
+    const row = await dao.createTransactionWithBalanceUpdate(input);
+    // Reload accounts so balances stay in sync in the account store
+    const { useAccountStore } = await import('./accountStore');
+    await useAccountStore.getState().load();
     set({ items: [row, ...get().items] });
     return row;
   },
@@ -29,7 +32,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     set({
       items: get()
         .items.map((t) => (t.id === row.id ? row : t))
-        .sort((a, b) => b.date - a.date || b.created_at - a.created_at),
+        .sort((a, b) => b.date - a.date || b.createdAt - a.createdAt),
     });
   },
   remove: async (id) => {

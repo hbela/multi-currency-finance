@@ -14,18 +14,14 @@ import {
 } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useScreenshot, DEVICE_DIMENSIONS, DeviceType } from '@/src/context/ScreenshotContext';
-import { useRouter } from 'expo-router';
-
 import { useAccountStore } from '@/src/store/accountStore';
 import { useCategoryStore } from '@/src/store/categoryStore';
-import { useRecurringStore } from '@/src/store/recurringStore';
 import { useThemeStore, ThemeMode } from '@/src/store/themeStore';
-import { AccountType, TxnType } from '@/src/types';
+import { AccountType, TransactionType } from '@/src/types';
 import { useAppTheme } from '@/src/theme';
 
 export default function SettingsScreen() {
   const theme = useAppTheme();
-  const router = useRouter();
   const { t, i18n } = useTranslation();
 
   const accounts = useAccountStore((s) => s.items);
@@ -34,10 +30,6 @@ export default function SettingsScreen() {
   const categories = useCategoryStore((s) => s.items);
   const addCategory = useCategoryStore((s) => s.add);
   const removeCategory = useCategoryStore((s) => s.remove);
-  const recurringCount = useRecurringStore((s) => s.items.length);
-  const activeRecurringCount = useRecurringStore(
-    (s) => s.items.filter((r) => r.active === 1).length
-  );
   const themeMode = useThemeStore((s) => s.mode);
   const setThemeMode = useThemeStore((s) => s.setMode);
 
@@ -57,7 +49,7 @@ export default function SettingsScreen() {
 
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [categoryName, setCategoryName] = useState('');
-  const [categoryType, setCategoryType] = useState<TxnType>('expense');
+  const [categoryType, setCategoryType] = useState<TransactionType>('EXPENSE');
 
   const submitAccount = async () => {
     if (!accountName.trim()) return;
@@ -73,7 +65,7 @@ export default function SettingsScreen() {
     await addCategory({ name: categoryName.trim(), icon: null, type: categoryType });
     setCategoryOpen(false);
     setCategoryName('');
-    setCategoryType('expense');
+    setCategoryType('EXPENSE');
   };
 
   const screenshotCountLabel = t(
@@ -160,24 +152,6 @@ export default function SettingsScreen() {
             {t('settings.addCategory')}
           </Button>
         </View>
-      </List.Section>
-
-      <Divider />
-
-      {/* Automation */}
-      <List.Section>
-        <List.Subheader>{t('settings.automation')}</List.Subheader>
-        <List.Item
-          title={t('settings.recurringTransactions')}
-          description={
-            recurringCount === 0
-              ? t('settings.recurringNone')
-              : t('settings.recurringActive', { active: String(activeRecurringCount), total: String(recurringCount) })
-          }
-          left={(p) => <List.Icon {...p} icon="repeat" />}
-          right={(p) => <List.Icon {...p} icon="chevron-right" />}
-          onPress={() => router.push('/recurring' as never)}
-        />
       </List.Section>
 
       <Divider />
@@ -274,10 +248,10 @@ export default function SettingsScreen() {
             <TextInput mode="outlined" label={t('settings.categoryName')} value={categoryName} onChangeText={setCategoryName} />
             <SegmentedButtons
               value={categoryType}
-              onValueChange={(v) => setCategoryType(v as TxnType)}
+              onValueChange={(v) => setCategoryType(v as TransactionType)}
               buttons={[
-                { value: 'expense', label: t('txn.types.expense') },
-                { value: 'income', label: t('txn.types.income') },
+                { value: 'EXPENSE', label: t('txn.types.EXPENSE') },
+                { value: 'INCOME', label: t('txn.types.INCOME') },
               ]}
             />
           </Dialog.Content>

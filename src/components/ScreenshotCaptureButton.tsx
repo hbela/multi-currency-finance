@@ -14,9 +14,10 @@ export default function ScreenshotCaptureButton({ screenName }: Props) {
   return (
     <IconButton
       icon="camera"
-      size={22}
-      iconColor={theme.colors.onSurface}
+      size={24}
+      iconColor={theme.colors.primary}
       disabled={isCapturing}
+      accessibilityLabel="Capture screenshot"
       onPress={() => captureCurrentScreen(screenName)}
     />
   );

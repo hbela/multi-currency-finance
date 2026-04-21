@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Button, Menu, Text } from 'react-native-paper';
-import { Category, TxnType } from '../types';
+import { Category, TransactionType } from '../types';
 
 interface Props {
   categories: Category[];
   value: string | null;
   onChange: (id: string) => void;
-  type: TxnType;
+  type: TransactionType;
 }
 
 export const CategoryPicker: React.FC<Props> = ({ categories, value, onChange, type }) => {
