@@ -1,4 +1,18 @@
 export type Translations = {
+  reports: {
+    title: string;
+    monthlyTrends: string;
+    lastMonths: string;
+    totalIncome: string;
+    totalExpense: string;
+    net: string;
+    savingsRate: string;
+    breakdown: string;
+    expenses: string;
+    income: string;
+    noTransactions: string;
+    noCategories: string;
+  };
   txn: {
     types: {
       EXPENSE: string; INCOME: string; TRANSFER: string;
@@ -15,23 +29,60 @@ export type Translations = {
       creditor: string; interestRate: string; remainingTerm: string;
     };
     sections: { details: string; currency: string };
+    notFound: string;
   };
   form: { save: string; delete: string; addTransaction: string; saveChanges: string };
+  nav: {
+    dashboard: string; transactions: string; budgets: string; reports: string; settings: string;
+    newTransaction: string; editTransaction: string;
+  };
+  dashboard: {
+    recentTransactions: string;
+    noTransactions: string;
+    totalBalance: string;
+    incomeThisMonth: string;
+    expenseThisMonth: string;
+    today: string;
+    yesterday: string;
+  };
+  transactions: { noTransactions: string };
+  budgets: { noBudgets: string; newBudget: string; monthlyLimit: string; left: string; overBy: string };
   settings: {
     title: string; appearance: string; themeSystem: string; themeLight: string; themeDark: string;
     accounts: string; addAccount: string; newAccount: string; accountName: string; accountCurrency: string;
+    accountTypeCash: string; accountTypeBank: string; accountTypeCard: string;
     categories: string; addCategory: string; newCategory: string; categoryName: string;
     automation: string; recurringTransactions: string; recurringNone: string; recurringActive: string;
-    data: string; exportDb: string; importDb: string; comingSoon: string;
+    data: string; exportDb: string; exportDbDesc: string;
+    exportSuccess: string; exportError: string;
     screenshots: string; deviceLabel: string;
     screenshotCount_one: string; screenshotCount_other: string;
     uploadToDrive: string; clear: string;
     language: string; languageLabel: string; version: string;
   };
-  common: { cancel: string; save: string; yes: string; no: string; delete: string };
+  recurring: {
+    frequency: string; weekly: string; monthly: string; yearly: string;
+    startDate: string; endDate: string; hasEndDate: string; note: string;
+    errorAmount: string; errorStartDate: string; errorEndDate: string; errorEndBeforeStart: string;
+  };
+  common: { cancel: string; save: string; yes: string; no: string; delete: string; ok: string };
 };
 
 const en: Translations = {
+  reports: {
+    title: 'Reports',
+    monthlyTrends: 'Monthly trends',
+    lastMonths: 'Last {{n}} months',
+    totalIncome: 'Income',
+    totalExpense: 'Expenses',
+    net: 'Net',
+    savingsRate: 'Savings {{pct}}%',
+    breakdown: '{{month}} breakdown',
+    expenses: 'Expenses',
+    income: 'Income',
+    noTransactions: 'No {{type}} transactions this month.',
+    noCategories: 'No categories to display.',
+  },
   txn: {
     types: {
       EXPENSE: 'Expense',
@@ -71,12 +122,41 @@ const en: Translations = {
       details: 'Details',
       currency: 'Currency & exchange rate',
     },
+    notFound: 'Transaction not found.',
   },
   form: {
     save: 'Save',
     delete: 'Delete',
     addTransaction: 'Add transaction',
     saveChanges: 'Save changes',
+  },
+  nav: {
+    dashboard: 'Dashboard',
+    transactions: 'Transactions',
+    budgets: 'Budgets',
+    reports: 'Reports',
+    settings: 'Settings',
+    newTransaction: 'New transaction',
+    editTransaction: 'Edit transaction',
+  },
+  dashboard: {
+    recentTransactions: 'Recent transactions',
+    noTransactions: 'No transactions yet. Tap + to add your first one.',
+    totalBalance: 'Total balance',
+    incomeThisMonth: 'Income (this month)',
+    expenseThisMonth: 'Expense (this month)',
+    today: 'Today',
+    yesterday: 'Yesterday',
+  },
+  transactions: {
+    noTransactions: 'No transactions yet. Tap + to add one.',
+  },
+  budgets: {
+    noBudgets: 'No budgets for {{month}}. Tap + to add one.',
+    newBudget: 'New budget',
+    monthlyLimit: 'Monthly limit',
+    left: '{{amount}} left',
+    overBy: 'Over by {{amount}}',
   },
   settings: {
     title: 'Settings',
@@ -89,6 +169,9 @@ const en: Translations = {
     newAccount: 'New account',
     accountName: 'Name',
     accountCurrency: 'Currency (3-letter)',
+    accountTypeCash: 'Cash',
+    accountTypeBank: 'Bank',
+    accountTypeCard: 'Card',
     categories: 'Categories',
     addCategory: 'Add category',
     newCategory: 'New category',
@@ -99,8 +182,9 @@ const en: Translations = {
     recurringActive: '{{active}} active · {{total}} total',
     data: 'Data',
     exportDb: 'Export database',
-    importDb: 'Import database',
-    comingSoon: 'Coming soon',
+    exportDbDesc: 'Save transactions, accounts & categories as CSV',
+    exportSuccess: 'Export complete',
+    exportError: 'Export failed',
     screenshots: 'Screenshots',
     deviceLabel: 'Device type label used in file names',
     screenshotCount_one: '{{count}} screenshot captured',
@@ -111,12 +195,27 @@ const en: Translations = {
     languageLabel: 'App language',
     version: 'FlexFinance · v2.0 · offline',
   },
+  recurring: {
+    frequency: 'Frequency',
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    yearly: 'Yearly',
+    startDate: 'Start date (YYYY-MM-DD)',
+    endDate: 'End date (YYYY-MM-DD)',
+    hasEndDate: 'End date',
+    note: 'Note',
+    errorAmount: 'Enter a valid amount.',
+    errorStartDate: 'Start date must be YYYY-MM-DD.',
+    errorEndDate: 'End date must be YYYY-MM-DD.',
+    errorEndBeforeStart: 'End date must be after start date.',
+  },
   common: {
     cancel: 'Cancel',
     save: 'Save',
     yes: 'Yes',
     no: 'No',
     delete: 'Delete',
+    ok: 'OK',
   },
 };
 

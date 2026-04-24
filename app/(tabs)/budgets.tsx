@@ -13,9 +13,11 @@ import { getBudgetProgressForMonth } from '@/src/db/budgets';
 import { BudgetProgress } from '@/src/types';
 import { monthKey } from '@/src/utils/date';
 import { useAppTheme } from '@/src/theme';
+import { useTranslation } from 'react-i18next';
 
 export default function BudgetsScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const categories = useCategoryStore((s) => s.items);
   const accounts = useAccountStore((s) => s.items);
   const addBudget = useBudgetStore((s) => s.add);
@@ -51,7 +53,7 @@ export default function BudgetsScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>
         {rows.length === 0 ? (
           <Text style={{ padding: 24, color: theme.colors.onSurfaceVariant }}>
-            No budgets for {month}. Tap + to add one.
+            {t('budgets.noBudgets', { month })}
           </Text>
         ) : (
           rows.map((r, i) => (
@@ -69,7 +71,7 @@ export default function BudgetsScreen() {
       />
       <Portal>
         <Dialog visible={open} onDismiss={() => setOpen(false)}>
-          <Dialog.Title>New budget</Dialog.Title>
+          <Dialog.Title>{t('budgets.newBudget')}</Dialog.Title>
           <Dialog.Content style={{ gap: 12 }}>
             <CategoryPicker
               categories={categories}
@@ -77,11 +79,11 @@ export default function BudgetsScreen() {
               onChange={setCategoryId}
               type="EXPENSE"
             />
-            <AmountInput value={amount} onChangeText={setAmount} currency={currency} label="Monthly limit" />
+            <AmountInput value={amount} onChangeText={setAmount} currency={currency} label={t('budgets.monthlyLimit')} />
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setOpen(false)}>Cancel</Button>
-            <Button onPress={submit}>Save</Button>
+            <Button onPress={() => setOpen(false)}>{t('common.cancel')}</Button>
+            <Button onPress={submit}>{t('common.save')}</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

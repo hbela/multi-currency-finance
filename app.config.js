@@ -19,7 +19,7 @@ export default {
     googleServicesFile: "./google-services.json",
     permissions: ["RECORD_AUDIO", "android.permission.RECORD_AUDIO"],
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#006874",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",

@@ -9,12 +9,14 @@ import { useAccountStore } from '@/src/store/accountStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { getMonthlySummary } from '@/src/db/transactions';
 import { useAppTheme } from '@/src/theme';
+import { useTranslation } from 'react-i18next';
 
 const BASE_CURRENCY = 'HUF';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const transactions = useTransactionStore((s) => s.items);
   const getNetWorth = useAccountStore((s) => s.getNetWorth);
   const [income, setIncome] = useState(0);
@@ -37,10 +39,10 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>
         <SummaryCard balance={netWorth} income={income} expense={expense} currency={BASE_CURRENCY} />
         <List.Section>
-          <List.Subheader>Recent transactions</List.Subheader>
+          <List.Subheader>{t('dashboard.recentTransactions')}</List.Subheader>
           {recent.length === 0 ? (
             <Text style={{ marginHorizontal: 16, color: theme.colors.onSurfaceVariant }}>
-              No transactions yet. Tap + to add your first one.
+              {t('dashboard.noTransactions')}
             </Text>
           ) : (
             recent.map((t) => (

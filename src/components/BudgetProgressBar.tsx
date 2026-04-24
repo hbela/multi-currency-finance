@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import { ProgressBar, Text } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { BudgetProgress } from '../types';
 import { formatCurrency } from '../utils/format';
 import { useCategoryStore } from '../store/categoryStore';
@@ -13,6 +14,7 @@ interface Props {
 
 export const BudgetProgressBar: React.FC<Props> = ({ progress, currency = 'USD' }) => {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const category = useCategoryStore((s) => s.byId(progress.budget.category_id));
   const pct = Math.min(progress.percent, 1);
   const over = progress.percent > 1;
@@ -32,8 +34,8 @@ export const BudgetProgressBar: React.FC<Props> = ({ progress, currency = 'USD' 
       <ProgressBar progress={pct} color={color} />
       <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
         {over
-          ? `Over by ${formatCurrency(-progress.remaining, currency)}`
-          : `${formatCurrency(progress.remaining, currency)} left`}
+          ? t('budgets.overBy', { amount: formatCurrency(-progress.remaining, currency) })
+          : t('budgets.left', { amount: formatCurrency(progress.remaining, currency) })}
       </Text>
     </View>
   );

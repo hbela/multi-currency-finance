@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Button, HelperText, SegmentedButtons, Switch, Text, TextInput } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 
 import { AmountInput } from './AmountInput';
 import { CategoryPicker } from './CategoryPicker';
@@ -36,6 +37,7 @@ export const RecurringForm: React.FC<Props> = ({
   submitLabel = 'Save',
 }) => {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const accounts = useAccountStore((s) => s.items);
   const categories = useCategoryStore((s) => s.items);
 
@@ -63,23 +65,23 @@ export const RecurringForm: React.FC<Props> = ({
     setError(null);
     const parsedAmount = parseFloat(amount);
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setError('Enter a valid amount.');
+      setError(t('recurring.errorAmount'));
       return;
     }
     const start = parseDateInput(startText);
     if (start == null) {
-      setError('Start date must be YYYY-MM-DD.');
+      setError(t('recurring.errorStartDate'));
       return;
     }
     let end: number | null = null;
     if (hasEnd) {
       end = parseDateInput(endText);
       if (end == null) {
-        setError('End date must be YYYY-MM-DD.');
+        setError(t('recurring.errorEndDate'));
         return;
       }
       if (end < start) {
-        setError('End date must be after start date.');
+        setError(t('recurring.errorEndBeforeStart'));
         return;
       }
     }
@@ -106,8 +108,8 @@ export const RecurringForm: React.FC<Props> = ({
         value={type}
         onValueChange={(v) => setType(v as TxnType)}
         buttons={[
-          { value: 'expense', label: 'Expense' },
-          { value: 'income', label: 'Income' },
+          { value: 'expense', label: t('txn.types.EXPENSE') },
+          { value: 'income', label: t('txn.types.INCOME') },
         ]}
       />
       <AmountInput value={amount} onChangeText={setAmount} currency={currency} autoFocus={!initial} />
@@ -120,21 +122,21 @@ export const RecurringForm: React.FC<Props> = ({
       <AccountPicker accounts={accounts} value={accountId} onChange={setAccountId} />
       <View>
         <Text variant="labelSmall" style={{ marginBottom: 4 }}>
-          Frequency
+          {t('recurring.frequency')}
         </Text>
         <SegmentedButtons
           value={frequency}
           onValueChange={(v) => setFrequency(v as RecurringFrequency)}
           buttons={[
-            { value: 'weekly', label: 'Weekly' },
-            { value: 'monthly', label: 'Monthly' },
-            { value: 'yearly', label: 'Yearly' },
+            { value: 'weekly', label: t('recurring.weekly') },
+            { value: 'monthly', label: t('recurring.monthly') },
+            { value: 'yearly', label: t('recurring.yearly') },
           ]}
         />
       </View>
       <TextInput
         mode="outlined"
-        label="Start date (YYYY-MM-DD)"
+        label={t('recurring.startDate')}
         value={startText}
         onChangeText={setStartText}
         autoCapitalize="none"
@@ -146,20 +148,20 @@ export const RecurringForm: React.FC<Props> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-        <Text>End date</Text>
+        <Text>{t('recurring.hasEndDate')}</Text>
         <Switch value={hasEnd} onValueChange={setHasEnd} />
       </View>
       {hasEnd && (
         <TextInput
           mode="outlined"
-          label="End date (YYYY-MM-DD)"
+          label={t('recurring.endDate')}
           value={endText}
           onChangeText={setEndText}
           autoCapitalize="none"
           keyboardType="numbers-and-punctuation"
         />
       )}
-      <TextInput mode="outlined" label="Note" value={note} onChangeText={setNote} />
+      <TextInput mode="outlined" label={t('recurring.note')} value={note} onChangeText={setNote} />
       {error && <HelperText type="error">{error}</HelperText>}
       <View style={{ gap: 8 }}>
         <Button mode="contained" onPress={handleSubmit} loading={saving} disabled={saving}>
@@ -171,7 +173,7 @@ export const RecurringForm: React.FC<Props> = ({
             textColor={theme.colors.error}
             onPress={onDelete}
             disabled={saving}>
-            Delete
+            {t('common.delete')}
           </Button>
         )}
       </View>

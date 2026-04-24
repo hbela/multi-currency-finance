@@ -6,7 +6,7 @@ import { useAccountStore } from '../store/accountStore';
 import { formatSigned } from '../utils/format';
 import { useAppTheme } from '../theme';
 
-const POSITIVE_TYPES: TransactionType[] = ['INCOME', 'LOAN_RECEIVED', 'INVESTMENT_SELL', 'DIVIDEND', 'INTEREST'];
+const POSITIVE_TYPES: TransactionType[] = ['INCOME', 'LOAN_RECEIVED', 'INVESTMENT_SELL' /*, 'DIVIDEND', 'INTEREST' */];
 
 interface Props {
   transaction: Transaction;
@@ -21,7 +21,7 @@ export const TransactionItem: React.FC<Props> = ({ transaction, onPress }) => {
   );
   const color = POSITIVE_TYPES.includes(transaction.type)
     ? theme.colors.income
-    : transaction.type === 'EXPENSE' || transaction.type === 'CREDIT_CARD_PAYMENT'
+    : transaction.type === 'EXPENSE' /* || transaction.type === 'CREDIT_CARD_PAYMENT' */
     ? theme.colors.expense
     : theme.colors.onSurface;
 

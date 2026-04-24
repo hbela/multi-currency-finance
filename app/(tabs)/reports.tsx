@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ScrollView, View } from 'react-native';
-import { Card, SegmentedButtons, Text } from 'react-native-paper';
+import { Card, IconButton, SegmentedButtons, Text } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryBreakdownChart } from '@/src/components/CategoryBreakdownChart';
 import { MonthlyTrendsChart } from '@/src/components/MonthlyTrendsChart';
@@ -14,50 +16,72 @@ import { useTransactionStore } from '@/src/store/transactionStore';
 import { useAppTheme } from '@/src/theme';
 import { TransactionType } from '@/src/types';
 import { monthKey, monthKeysEndingAt } from '@/src/utils/date';
-import { formatCurrency } from '@/src/utils/format';
+import { formatCurrency, getFormatLocale } from '@/src/utils/format';
+
+// Navigate months: returns the YYYY-MM key shifted by `delta` months
+function shiftMonth(key: string, delta: number): string {
+  const [y, m] = key.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function monthLabel(key: string): string {
+  const [y, m] = key.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString(getFormatLocale(), { month: 'long', year: 'numeric' });
+}
 
 export default function ReportsScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const transactions = useTransactionStore((s) => s.items);
+
   const [type, setType] = useState<TransactionType>('EXPENSE');
   const [rangeMonths, setRangeMonths] = useState<6 | 12>(6);
+  const [selectedMonth, setSelectedMonth] = useState(monthKey());
   const [rows, setRows] = useState<CategoryBreakdownRow[]>([]);
   const [series, setSeries] = useState<MonthlySeriesPoint[]>([]);
+
   const currency = 'HUF';
-  const month = monthKey();
+  const currentMonth = monthKey();
 
   const refresh = useCallback(async () => {
     const keys = monthKeysEndingAt(rangeMonths);
     const [breakdown, trends] = await Promise.all([
-      getCategoryBreakdown(month, type),
+      getCategoryBreakdown(selectedMonth, type),
       getMonthlyTotalsSeries(keys),
     ]);
     setRows(breakdown);
     setSeries(trends);
-  }, [month, type, rangeMonths]);
+  }, [selectedMonth, type, rangeMonths]);
 
   useEffect(() => {
     refresh();
   }, [refresh, transactions]);
 
-  const total = rows.reduce((acc, r) => acc + r.total, 0);
   const trendIncome = series.reduce((acc, p) => acc + p.income, 0);
   const trendExpense = series.reduce((acc, p) => acc + p.expense, 0);
+  const trendNet = trendIncome - trendExpense;
+  const savingsRate = trendIncome > 0 ? Math.round((trendNet / trendIncome) * 100) : 0;
+
+  const breakdownTotal = rows.reduce((acc, r) => acc + r.total, 0);
+  const canGoForward = selectedMonth < currentMonth;
 
   return (
     <ScrollView
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={{ padding: 16, gap: 16 }}>
+      contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: insets.bottom + 16 }}>
+
+      {/* ── Monthly trends ─────────────────────────────────── */}
       <Card mode="elevated">
         <Card.Content style={{ gap: 12 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text variant="titleMedium">Monthly trends</Text>
-            <Text
-              variant="labelSmall"
-              style={{ color: theme.colors.onSurfaceVariant, alignSelf: 'center' }}>
-              Last {rangeMonths} months
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text variant="titleMedium">{t('reports.monthlyTrends')}</Text>
+            <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              {t('reports.lastMonths', { n: rangeMonths })}
             </Text>
           </View>
+
           <SegmentedButtons
             value={String(rangeMonths)}
             onValueChange={(v) => setRangeMonths(v === '12' ? 12 : 6)}
@@ -66,60 +90,76 @@ export default function ReportsScreen() {
               { value: '12', label: '12M' },
             ]}
           />
+
           <MonthlyTrendsChart data={series} currency={currency} />
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              paddingTop: 4,
-            }}>
-            <View>
-              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                Total income
-              </Text>
-              <Text variant="titleSmall" style={{ color: theme.colors.income }}>
-                {formatCurrency(trendIncome, currency)}
-              </Text>
-            </View>
-            <View>
-              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                Total expense
-              </Text>
-              <Text variant="titleSmall" style={{ color: theme.colors.expense }}>
-                {formatCurrency(trendExpense, currency)}
-              </Text>
-            </View>
-            <View>
-              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                Net
-              </Text>
-              <Text variant="titleSmall">
-                {formatCurrency(trendIncome - trendExpense, currency)}
-              </Text>
-            </View>
+
+          {/* Summary row — 3 columns, wraps cleanly */}
+          <View style={{ flexDirection: 'row', gap: 4, paddingTop: 4 }}>
+            <SummaryCell
+              label={t('reports.totalIncome')}
+              value={formatCurrency(trendIncome, currency)}
+              color={theme.colors.income}
+            />
+            <SummaryCell
+              label={t('reports.totalExpense')}
+              value={formatCurrency(trendExpense, currency)}
+              color={theme.colors.expense}
+            />
+            <SummaryCell
+              label={t('reports.net')}
+              value={formatCurrency(trendNet, currency)}
+              color={trendNet >= 0 ? theme.colors.income : theme.colors.expense}
+              sub={trendIncome > 0 ? t('reports.savingsRate', { pct: savingsRate }) : undefined}
+            />
           </View>
         </Card.Content>
       </Card>
 
+      {/* ── Category breakdown ─────────────────────────────── */}
       <Card mode="elevated">
         <Card.Content style={{ gap: 12 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text variant="titleMedium">{month} breakdown</Text>
-            {rows.length > 0 && (
-              <Text variant="titleSmall">{formatCurrency(total, currency)}</Text>
+          {/* Header with month picker */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text variant="titleMedium" style={{ flex: 1 }}>
+              {t('reports.breakdown', { month: monthLabel(selectedMonth) })}
+            </Text>
+            {breakdownTotal > 0 && (
+              <Text variant="titleSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {formatCurrency(breakdownTotal, currency)}
+              </Text>
             )}
           </View>
+
+          {/* Month navigation */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <IconButton
+              icon="chevron-left"
+              size={20}
+              onPress={() => setSelectedMonth((m) => shiftMonth(m, -1))}
+            />
+            <Text variant="bodyMedium" style={{ minWidth: 140, textAlign: 'center' }}>
+              {monthLabel(selectedMonth)}
+            </Text>
+            <IconButton
+              icon="chevron-right"
+              size={20}
+              disabled={!canGoForward}
+              onPress={() => canGoForward && setSelectedMonth((m) => shiftMonth(m, 1))}
+            />
+          </View>
+
           <SegmentedButtons
             value={type}
             onValueChange={(v) => setType(v as TransactionType)}
             buttons={[
-              { value: 'EXPENSE', label: 'Expenses' },
-              { value: 'INCOME', label: 'Income' },
+              { value: 'EXPENSE', label: t('reports.expenses') },
+              { value: 'INCOME', label: t('reports.income') },
             ]}
           />
+
           {rows.length === 0 ? (
             <Text style={{ color: theme.colors.onSurfaceVariant }}>
-              No {type} transactions this month.
+              {t('reports.noTransactions', { type: type.toLowerCase() })}
             </Text>
           ) : (
             <CategoryBreakdownChart rows={rows} currency={currency} />
@@ -129,3 +169,29 @@ export default function ReportsScreen() {
     </ScrollView>
   );
 }
+
+interface SummaryCellProps {
+  label: string;
+  value: string;
+  color?: string;
+  sub?: string;
+}
+
+const SummaryCell: React.FC<SummaryCellProps> = ({ label, value, color, sub }) => {
+  const theme = useAppTheme();
+  return (
+    <View style={{ flex: 1, gap: 2 }}>
+      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }} numberOfLines={1}>
+        {label}
+      </Text>
+      <Text variant="labelMedium" style={{ color: color ?? theme.colors.onSurface }} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+      {sub && (
+        <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }} numberOfLines={1}>
+          {sub}
+        </Text>
+      )}
+    </View>
+  );
+};

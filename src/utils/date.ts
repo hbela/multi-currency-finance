@@ -45,10 +45,10 @@ export const monthKeysEndingAt = (count: number, ref: Date = new Date()): string
   return keys;
 };
 
-export const monthShortLabel = (key: string): string => {
+export const monthShortLabel = (key: string, locale?: string): string => {
   const [y, m] = key.split('-').map(Number);
   const d = new Date(y, m - 1, 1);
-  return d.toLocaleDateString(undefined, { month: 'short' });
+  return d.toLocaleDateString(locale, { month: 'short' });
 };
 
 export const monthRange = (key: string): { start: number; end: number } => {
@@ -58,7 +58,12 @@ export const monthRange = (key: string): { start: number; end: number } => {
   return { start, end };
 };
 
-export const formatDateLabel = (ts: number): string => {
+export const formatDateLabel = (
+  ts: number,
+  locale?: string,
+  todayLabel = 'Today',
+  yesterdayLabel = 'Yesterday',
+): string => {
   const d = new Date(ts);
   const today = new Date();
   const yesterday = new Date();
@@ -67,9 +72,9 @@ export const formatDateLabel = (ts: number): string => {
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
-  if (same(d, today)) return 'Today';
-  if (same(d, yesterday)) return 'Yesterday';
-  return d.toLocaleDateString(undefined, {
+  if (same(d, today)) return todayLabel;
+  if (same(d, yesterday)) return yesterdayLabel;
+  return d.toLocaleDateString(locale, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

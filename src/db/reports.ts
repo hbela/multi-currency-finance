@@ -16,7 +16,7 @@ export const getCategorySpending = async (
      FROM transactions t
      LEFT JOIN categories c ON c.id = t.categoryId
      WHERE t.date >= ? AND t.date < ?
-       AND t.type IN ('EXPENSE', 'CREDIT_CARD_PAYMENT')
+       AND t.type IN ('EXPENSE' /*, 'CREDIT_CARD_PAYMENT' */)
      GROUP BY t.categoryId
      ORDER BY total DESC`,
     [start, end]
@@ -29,8 +29,8 @@ export const getMonthlyTrends = async (months: string[]): Promise<MonthlySeriesP
   const { end } = monthRange(months[months.length - 1]);
   const rows = await db.getAllAsync<{ month: string; income: number | null; expense: number | null }>(
     `SELECT strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS month,
-       COALESCE(SUM(CASE WHEN type IN ('INCOME','DIVIDEND','INTEREST','LOAN_RECEIVED') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
-       COALESCE(SUM(CASE WHEN type IN ('EXPENSE','CREDIT_CARD_PAYMENT') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
+       COALESCE(SUM(CASE WHEN type IN ('INCOME','LOAN_RECEIVED') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
+       COALESCE(SUM(CASE WHEN type IN ('EXPENSE') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
      FROM transactions WHERE date >= ? AND date < ?
      GROUP BY month`,
     [start, end]

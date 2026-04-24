@@ -32,6 +32,7 @@
     "expo-linking": "~8.0.11",
     "expo-localization": "^55.0.13",
     "expo-router": "~6.0.23",
+    "expo-sharing": "~14.0.8",
     "expo-speech-recognition": "^3.1.2",
     "expo-splash-screen": "~31.0.13",
     "expo-sqlite": "~16.0.10",
@@ -59,6 +60,7 @@
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "sharp": "^0.34.5",
     "typescript": "~5.9.2"
   },
   "private": true

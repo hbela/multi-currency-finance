@@ -7,10 +7,10 @@ export type TransactionType =
   | 'INVESTMENT_BUY'
   | 'INVESTMENT_SELL'
   | 'LOAN_RECEIVED'
-  | 'LOAN_REPAYMENT'
-  | 'DIVIDEND'
-  | 'INTEREST'
-  | 'CREDIT_CARD_PAYMENT';
+  | 'LOAN_REPAYMENT';
+  // | 'DIVIDEND'          // disabled — not needed for digital-nomad use case
+  // | 'INTEREST'          // disabled — not needed for digital-nomad use case
+  // | 'CREDIT_CARD_PAYMENT'; // disabled — not needed for digital-nomad use case
 
 /** @deprecated Use TransactionType instead */
 export type TxnType = 'income' | 'expense' | 'transfer' | 'investment' | 'debt' | 'subscription';

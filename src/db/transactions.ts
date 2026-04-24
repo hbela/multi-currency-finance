@@ -38,13 +38,13 @@ export const getBalanceDelta = (type: TransactionType, amountBase: string): numb
     case 'INCOME':
     case 'LOAN_RECEIVED':
     case 'INVESTMENT_SELL':
-    case 'DIVIDEND':
-    case 'INTEREST':
+    // case 'DIVIDEND':   // disabled
+    // case 'INTEREST':   // disabled
       return n;
     case 'EXPENSE':
     case 'LOAN_REPAYMENT':
     case 'INVESTMENT_BUY':
-    case 'CREDIT_CARD_PAYMENT':
+    // case 'CREDIT_CARD_PAYMENT':  // disabled
       return -n;
     case 'TRANSFER':
       return -n;
@@ -177,8 +177,8 @@ export const getMonthlySummary = async (year: number, month: number): Promise<Mo
   const { start, end } = monthRange(monthStr);
   const row = await db.getFirstAsync<{ income: number | null; expense: number | null }>(
     `SELECT
-       COALESCE(SUM(CASE WHEN type IN ('INCOME','DIVIDEND','INTEREST','LOAN_RECEIVED') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
-       COALESCE(SUM(CASE WHEN type IN ('EXPENSE','CREDIT_CARD_PAYMENT') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
+       COALESCE(SUM(CASE WHEN type IN ('INCOME','LOAN_RECEIVED') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
+       COALESCE(SUM(CASE WHEN type IN ('EXPENSE') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
      FROM transactions WHERE date >= ? AND date < ?`,
     [start, end]
   );
@@ -283,8 +283,8 @@ export const getMonthlyTotalsSeries = async (months: string[]): Promise<MonthlyS
   const { end } = monthRange(months[months.length - 1]);
   const rows = await db.getAllAsync<{ month: string; income: number | null; expense: number | null }>(
     `SELECT strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS month,
-       COALESCE(SUM(CASE WHEN type IN ('INCOME','DIVIDEND','INTEREST') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
-       COALESCE(SUM(CASE WHEN type IN ('EXPENSE','CREDIT_CARD_PAYMENT') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
+       COALESCE(SUM(CASE WHEN type IN ('INCOME') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
+       COALESCE(SUM(CASE WHEN type IN ('EXPENSE') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
      FROM transactions WHERE date >= ? AND date < ?
      GROUP BY month`,
     [start, end]

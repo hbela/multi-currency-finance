@@ -6,19 +6,21 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { TransactionForm } from '@/src/components/TransactionForm';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { useAppTheme } from '@/src/theme';
+import { useTranslation } from 'react-i18next';
 
 export default function EditTransactionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const theme = useAppTheme();
-  const transaction = useTransactionStore((s) => s.items.find((t) => t.id === id));
+  const { t } = useTranslation();
+  const transaction = useTransactionStore((s) => s.items.find((tx) => tx.id === id));
   const update = useTransactionStore((s) => s.update);
   const remove = useTransactionStore((s) => s.remove);
 
   if (!transaction) {
     return (
       <View style={{ flex: 1, padding: 24, backgroundColor: theme.colors.background }}>
-        <Text>Transaction not found.</Text>
+        <Text>{t('txn.notFound')}</Text>
       </View>
     );
   }

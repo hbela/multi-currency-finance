@@ -22,7 +22,7 @@ const ALL_TYPES: TransactionType[] = [
   'EXPENSE', 'INCOME', 'TRANSFER',
   'INVESTMENT_BUY', 'INVESTMENT_SELL',
   'LOAN_RECEIVED', 'LOAN_REPAYMENT',
-  'DIVIDEND', 'INTEREST', 'CREDIT_CARD_PAYMENT',
+  // 'DIVIDEND', 'INTEREST', 'CREDIT_CARD_PAYMENT', // disabled — not needed for digital-nomad use case
 ];
 
 // ─── Form value shape ─────────────────────────────────────────────────────────

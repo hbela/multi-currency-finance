@@ -1,4 +1,3 @@
-import '@/src/i18n';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -24,6 +23,9 @@ import { useBudgetStore } from '@/src/store/budgetStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { processRecurringTransactions } from '@/src/db/transactions';
 import { darkTheme, lightTheme } from '@/src/theme';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/src/i18n';
+import { getSetting } from '@/src/db/settings';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -41,6 +43,7 @@ export const unstable_settings = {
 export default function RootLayout() {
   const systemScheme = useColorScheme();
   const themeMode = useThemeStore((s) => s.mode);
+  const { t } = useTranslation();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -49,6 +52,11 @@ export default function RootLayout() {
         await runMigrations();
         await seedIfEmpty();
         await processRecurringTransactions();
+        const savedLang = await getSetting('app_language');
+        const supported = ['en', 'hu', 'de', 'fr'];
+        if (savedLang && supported.includes(savedLang) && savedLang !== i18n.language) {
+          await i18n.changeLanguage(savedLang);
+        }
         await Promise.all([
           useAccountStore.getState().load(),
           useCategoryStore.getState().load(),
@@ -79,11 +87,11 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
               name="transaction/new"
-              options={{ presentation: 'modal', title: 'New transaction' }}
+              options={{ presentation: 'modal', title: t('nav.newTransaction') }}
             />
             <Stack.Screen
               name="transaction/[id]"
-              options={{ presentation: 'modal', title: 'Edit transaction' }}
+              options={{ presentation: 'modal', title: t('nav.editTransaction') }}
             />
           </Stack>
           <StatusBar style="auto" />

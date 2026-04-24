@@ -7,7 +7,9 @@ import { TransactionItem } from '@/src/components/TransactionItem';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { Transaction } from '@/src/types';
 import { formatDateLabel } from '@/src/utils/date';
+import { getFormatLocale } from '@/src/utils/format';
 import { useAppTheme } from '@/src/theme';
+import { useTranslation } from 'react-i18next';
 
 interface Section {
   title: string;
@@ -17,28 +19,32 @@ interface Section {
 export default function TransactionsScreen() {
   const router = useRouter();
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const items = useTransactionStore((s) => s.items);
 
   const sections = useMemo<Section[]>(() => {
+    const locale = getFormatLocale();
+    const todayLabel = t('dashboard.today');
+    const yesterdayLabel = t('dashboard.yesterday');
     const groups = new Map<string, Transaction[]>();
-    for (const t of items) {
-      const key = new Date(t.date).toDateString();
+    for (const tx of items) {
+      const key = new Date(tx.date).toDateString();
       const bucket = groups.get(key);
-      if (bucket) bucket.push(t);
-      else groups.set(key, [t]);
+      if (bucket) bucket.push(tx);
+      else groups.set(key, [tx]);
     }
     return Array.from(groups.entries()).map(([key, data]) => ({
-      title: formatDateLabel(new Date(key).getTime()),
+      title: formatDateLabel(new Date(key).getTime(), locale, todayLabel, yesterdayLabel),
       data,
     }));
-  }, [items]);
+  }, [items, t]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       {sections.length === 0 ? (
         <View style={{ padding: 24 }}>
           <Text style={{ color: theme.colors.onSurfaceVariant }}>
-            No transactions yet. Tap + to add one.
+            {t('transactions.noTransactions')}
           </Text>
         </View>
       ) : (

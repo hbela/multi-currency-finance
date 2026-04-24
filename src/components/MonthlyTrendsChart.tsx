@@ -1,11 +1,12 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 
 import { MonthlySeriesPoint } from '../db/transactions';
 import { useAppTheme } from '../theme';
 import { monthShortLabel } from '../utils/date';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, getFormatLocale } from '../utils/format';
 
 interface Props {
   data: MonthlySeriesPoint[];
@@ -13,8 +14,8 @@ interface Props {
   height?: number;
 }
 
-const BAR_AREA_HEIGHT = 140;
-const BAR_WIDTH = 12;
+const BAR_AREA_HEIGHT = 180;
+const BAR_MIN_PX = 3;
 
 export const MonthlyTrendsChart: React.FC<Props> = ({
   data,
@@ -22,14 +23,15 @@ export const MonthlyTrendsChart: React.FC<Props> = ({
   height = BAR_AREA_HEIGHT,
 }) => {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const max = data.reduce((m, p) => Math.max(m, p.income, p.expense), 0);
   const anyData = max > 0;
 
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row', gap: 16 }}>
-        <Legend color={theme.colors.income} label="Income" />
-        <Legend color={theme.colors.expense} label="Expense" />
+        <Legend color={theme.colors.income} label={t('reports.totalIncome')} />
+        <Legend color={theme.colors.expense} label={t('reports.totalExpense')} />
       </View>
 
       <View
@@ -37,25 +39,18 @@ export const MonthlyTrendsChart: React.FC<Props> = ({
           flexDirection: 'row',
           alignItems: 'flex-end',
           height,
-          gap: 4,
           borderBottomWidth: 1,
           borderBottomColor: theme.colors.outlineVariant,
           paddingBottom: 2,
         }}>
         {data.map((point) => {
-          const incomeH = anyData ? (point.income / max) * height : 0;
-          const expenseH = anyData ? (point.expense / max) * height : 0;
+          const incomeH = anyData ? Math.max((point.income / max) * height, point.income > 0 ? BAR_MIN_PX : 0) : 0;
+          const expenseH = anyData ? Math.max((point.expense / max) * height, point.expense > 0 ? BAR_MIN_PX : 0) : 0;
           return (
             <View
               key={point.month}
-              style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end' }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'flex-end',
-                  gap: 3,
-                  height,
-                }}>
+              style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', height }}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 2 }}>
                 <Bar height={incomeH} color={theme.colors.income} />
                 <Bar height={expenseH} color={theme.colors.expense} />
               </View>
@@ -64,11 +59,15 @@ export const MonthlyTrendsChart: React.FC<Props> = ({
         })}
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 4 }}>
+      {/* Month labels — always show all */}
+      <View style={{ flexDirection: 'row' }}>
         {data.map((point) => (
           <View key={point.month} style={{ flex: 1, alignItems: 'center' }}>
-            <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-              {monthShortLabel(point.month)}
+            <Text
+              variant="labelSmall"
+              style={{ color: theme.colors.onSurfaceVariant, fontSize: 10 }}
+              numberOfLines={1}>
+              {monthShortLabel(point.month, getFormatLocale())}
             </Text>
           </View>
         ))}
@@ -78,7 +77,7 @@ export const MonthlyTrendsChart: React.FC<Props> = ({
         <Text
           variant="bodySmall"
           style={{ textAlign: 'center', color: theme.colors.onSurfaceVariant }}>
-          No data in this range yet.
+          {t('reports.noTransactions', { type: '' }).replace(/\.$/, '…')}
         </Text>
       )}
 
@@ -96,11 +95,11 @@ export const MonthlyTrendsChart: React.FC<Props> = ({
 const Bar: React.FC<{ height: number; color: string }> = ({ height, color }) => (
   <View
     style={{
-      width: BAR_WIDTH,
-      height: Math.max(height, height > 0 ? 2 : 0),
+      width: 10,
+      height,
       backgroundColor: color,
-      borderTopLeftRadius: 4,
-      borderTopRightRadius: 4,
+      borderTopLeftRadius: 3,
+      borderTopRightRadius: 3,
     }}
   />
 );

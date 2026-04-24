@@ -50,7 +50,7 @@ export const getBudgetProgressForMonth = async (month: string): Promise<BudgetPr
     `SELECT b.*, COALESCE((
        SELECT SUM(CAST(t.amountBase AS REAL)) FROM transactions t
        WHERE t.categoryId = b.category_id
-         AND t.type IN ('EXPENSE', 'CREDIT_CARD_PAYMENT')
+         AND t.type IN ('EXPENSE' /*, 'CREDIT_CARD_PAYMENT' */)
          AND t.date >= ? AND t.date < ?
      ), 0) AS spent
      FROM budgets b

@@ -9,6 +9,7 @@ import {
   List,
   Portal,
   SegmentedButtons,
+  Snackbar,
   Text,
   TextInput,
 } from 'react-native-paper';
@@ -17,8 +18,10 @@ import { useScreenshot, DEVICE_DIMENSIONS, DeviceType } from '@/src/context/Scre
 import { useAccountStore } from '@/src/store/accountStore';
 import { useCategoryStore } from '@/src/store/categoryStore';
 import { useThemeStore, ThemeMode } from '@/src/store/themeStore';
+import { setSetting } from '@/src/db/settings';
 import { AccountType, TransactionType } from '@/src/types';
 import { useAppTheme } from '@/src/theme';
+import { exportDatabaseAsCsv } from '@/src/utils/exportCsv';
 
 export default function SettingsScreen() {
   const theme = useAppTheme();
@@ -41,6 +44,21 @@ export default function SettingsScreen() {
     uploadAllToGoogleDrive,
     clearAllScreenshots,
   } = useScreenshot();
+
+  const [exportingCsv, setExportingCsv] = useState(false);
+  const [exportSnackbar, setExportSnackbar] = useState<{ visible: boolean; message: string; error: boolean }>({ visible: false, message: '', error: false });
+
+  const handleExportCsv = async () => {
+    setExportingCsv(true);
+    try {
+      await exportDatabaseAsCsv();
+      setExportSnackbar({ visible: true, message: t('settings.exportSuccess'), error: false });
+    } catch (e) {
+      setExportSnackbar({ visible: true, message: `${t('settings.exportError')}: ${e instanceof Error ? e.message : String(e)}`, error: true });
+    } finally {
+      setExportingCsv(false);
+    }
+  };
 
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountName, setAccountName] = useState('');
@@ -99,7 +117,7 @@ export default function SettingsScreen() {
         <View style={{ paddingHorizontal: 16 }}>
           <SegmentedButtons
             value={i18n.language}
-            onValueChange={(lang) => i18n.changeLanguage(lang)}
+            onValueChange={(lang) => { i18n.changeLanguage(lang); setSetting('app_language', lang); }}
             buttons={[
               { value: 'en', label: 'EN' },
               { value: 'hu', label: 'HU' },
@@ -159,8 +177,23 @@ export default function SettingsScreen() {
       {/* Data */}
       <List.Section>
         <List.Subheader>{t('settings.data')}</List.Subheader>
-        <List.Item title={t('settings.exportDb')} description={t('settings.comingSoon')} disabled />
-        <List.Item title={t('settings.importDb')} description={t('settings.comingSoon')} disabled />
+        <List.Item
+          title={t('settings.exportDb')}
+          description={t('settings.exportDbDesc')}
+          left={(p) => <List.Icon {...p} icon="export" />}
+          right={() => (
+            <Button
+              mode="contained-tonal"
+              compact
+              icon="google-drive"
+              loading={exportingCsv}
+              disabled={exportingCsv}
+              onPress={handleExportCsv}>
+              CSV
+            </Button>
+          )}
+        />
+
       </List.Section>
 
       <Divider />
@@ -230,9 +263,9 @@ export default function SettingsScreen() {
               value={accountType}
               onValueChange={(v) => setAccountType(v as AccountType)}
               buttons={[
-                { value: 'cash', label: 'Cash' },
-                { value: 'bank', label: 'Bank' },
-                { value: 'card', label: 'Card' },
+                { value: 'cash', label: t('settings.accountTypeCash') },
+                { value: 'bank', label: t('settings.accountTypeBank') },
+                { value: 'card', label: t('settings.accountTypeCard') },
               ]}
             />
           </Dialog.Content>
@@ -261,6 +294,14 @@ export default function SettingsScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
+
+      <Snackbar
+        visible={exportSnackbar.visible}
+        onDismiss={() => setExportSnackbar((s) => ({ ...s, visible: false }))}
+        duration={exportSnackbar.error ? 6000 : 2500}
+        action={{ label: t('common.ok'), onPress: () => setExportSnackbar((s) => ({ ...s, visible: false })) }}>
+        {exportSnackbar.message}
+      </Snackbar>
     </ScrollView>
   );
 }
