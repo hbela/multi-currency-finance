@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { MonthlySeriesPoint } from '../db/transactions';
 import { useAppTheme } from '../theme';
 import { monthShortLabel } from '../utils/date';
-import { formatCurrency, getFormatLocale } from '../utils/format';
+import { useLocaleStore } from '../store/localeStore';
+import { useMoneyFormatter } from '../hooks/useFormattedAmount';
 
 interface Props {
   data: MonthlySeriesPoint[];
@@ -24,6 +25,8 @@ export const MonthlyTrendsChart: React.FC<Props> = ({
 }) => {
   const theme = useAppTheme();
   const { t } = useTranslation();
+  const { locale } = useLocaleStore();
+  const fmt = useMoneyFormatter(currency);
   const max = data.reduce((m, p) => Math.max(m, p.income, p.expense), 0);
   const anyData = max > 0;
 
@@ -67,7 +70,7 @@ export const MonthlyTrendsChart: React.FC<Props> = ({
               variant="labelSmall"
               style={{ color: theme.colors.onSurfaceVariant, fontSize: 10 }}
               numberOfLines={1}>
-              {monthShortLabel(point.month, getFormatLocale())}
+              {monthShortLabel(point.month, locale)}
             </Text>
           </View>
         ))}
@@ -85,7 +88,7 @@ export const MonthlyTrendsChart: React.FC<Props> = ({
         <Text
           variant="labelSmall"
           style={{ textAlign: 'right', color: theme.colors.onSurfaceVariant }}>
-          Max: {formatCurrency(max, currency)}
+          Max: {fmt(max)}
         </Text>
       )}
     </View>

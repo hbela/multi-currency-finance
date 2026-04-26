@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { formatCurrency } from '../utils/format';
+import { useMoneyFormatter } from '../hooks/useFormattedAmount';
 import { useAppTheme } from '../theme';
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
 export const SummaryCard: React.FC<Props> = ({ balance, income, expense, currency = 'USD' }) => {
   const theme = useAppTheme();
   const { t } = useTranslation();
+  const fmt = useMoneyFormatter(currency);
   return (
     <Card mode="elevated" style={{ margin: 16 }}>
       <Card.Content style={{ gap: 12 }}>
@@ -22,7 +23,7 @@ export const SummaryCard: React.FC<Props> = ({ balance, income, expense, currenc
           <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant }}>
             {t('dashboard.totalBalance')}
           </Text>
-          <Text variant="headlineMedium">{formatCurrency(balance, currency)}</Text>
+          <Text variant="headlineMedium">{fmt(balance)}</Text>
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <View>
@@ -30,7 +31,7 @@ export const SummaryCard: React.FC<Props> = ({ balance, income, expense, currenc
               {t('dashboard.incomeThisMonth')}
             </Text>
             <Text variant="titleMedium" style={{ color: theme.colors.income }}>
-              {formatCurrency(income, currency)}
+              {fmt(income)}
             </Text>
           </View>
           <View>
@@ -38,7 +39,7 @@ export const SummaryCard: React.FC<Props> = ({ balance, income, expense, currenc
               {t('dashboard.expenseThisMonth')}
             </Text>
             <Text variant="titleMedium" style={{ color: theme.colors.expense }}>
-              {formatCurrency(expense, currency)}
+              {fmt(expense)}
             </Text>
           </View>
         </View>

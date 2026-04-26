@@ -16,25 +16,29 @@ import { useTransactionStore } from '@/src/store/transactionStore';
 import { useAppTheme } from '@/src/theme';
 import { TransactionType } from '@/src/types';
 import { monthKey, monthKeysEndingAt } from '@/src/utils/date';
-import { formatCurrency, getFormatLocale } from '@/src/utils/format';
+import { useLocaleStore } from '@/src/store/localeStore';
+import { useMoneyFormatter } from '@/src/hooks/useFormattedAmount';
 
-// Navigate months: returns the YYYY-MM key shifted by `delta` months
 function shiftMonth(key: string, delta: number): string {
   const [y, m] = key.split('-').map(Number);
   const d = new Date(y, m - 1 + delta, 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function monthLabel(key: string): string {
+function monthLabel(key: string, locale: string): string {
   const [y, m] = key.split('-').map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString(getFormatLocale(), { month: 'long', year: 'numeric' });
+  return new Date(y, m - 1, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 }
+
+const CURRENCY = 'HUF';
 
 export default function ReportsScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const transactions = useTransactionStore((s) => s.items);
+  const { locale } = useLocaleStore();
+  const fmt = useMoneyFormatter(CURRENCY);
 
   const [type, setType] = useState<TransactionType>('EXPENSE');
   const [rangeMonths, setRangeMonths] = useState<6 | 12>(6);
@@ -42,7 +46,6 @@ export default function ReportsScreen() {
   const [rows, setRows] = useState<CategoryBreakdownRow[]>([]);
   const [series, setSeries] = useState<MonthlySeriesPoint[]>([]);
 
-  const currency = 'HUF';
   const currentMonth = monthKey();
 
   const refresh = useCallback(async () => {
@@ -91,23 +94,23 @@ export default function ReportsScreen() {
             ]}
           />
 
-          <MonthlyTrendsChart data={series} currency={currency} />
+          <MonthlyTrendsChart data={series} currency={CURRENCY} />
 
           {/* Summary row — 3 columns, wraps cleanly */}
           <View style={{ flexDirection: 'row', gap: 4, paddingTop: 4 }}>
             <SummaryCell
               label={t('reports.totalIncome')}
-              value={formatCurrency(trendIncome, currency)}
+              value={fmt(trendIncome)}
               color={theme.colors.income}
             />
             <SummaryCell
               label={t('reports.totalExpense')}
-              value={formatCurrency(trendExpense, currency)}
+              value={fmt(trendExpense)}
               color={theme.colors.expense}
             />
             <SummaryCell
               label={t('reports.net')}
-              value={formatCurrency(trendNet, currency)}
+              value={fmt(trendNet)}
               color={trendNet >= 0 ? theme.colors.income : theme.colors.expense}
               sub={trendIncome > 0 ? t('reports.savingsRate', { pct: savingsRate }) : undefined}
             />
@@ -121,11 +124,11 @@ export default function ReportsScreen() {
           {/* Header with month picker */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text variant="titleMedium" style={{ flex: 1 }}>
-              {t('reports.breakdown', { month: monthLabel(selectedMonth) })}
+              {t('reports.breakdown', { month: monthLabel(selectedMonth, locale) })}
             </Text>
             {breakdownTotal > 0 && (
               <Text variant="titleSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {formatCurrency(breakdownTotal, currency)}
+                {fmt(breakdownTotal)}
               </Text>
             )}
           </View>
@@ -138,7 +141,7 @@ export default function ReportsScreen() {
               onPress={() => setSelectedMonth((m) => shiftMonth(m, -1))}
             />
             <Text variant="bodyMedium" style={{ minWidth: 140, textAlign: 'center' }}>
-              {monthLabel(selectedMonth)}
+              {monthLabel(selectedMonth, locale)}
             </Text>
             <IconButton
               icon="chevron-right"
@@ -162,7 +165,7 @@ export default function ReportsScreen() {
               {t('reports.noTransactions', { type: type.toLowerCase() })}
             </Text>
           ) : (
-            <CategoryBreakdownChart rows={rows} currency={currency} />
+            <CategoryBreakdownChart rows={rows} currency={CURRENCY} />
           )}
         </Card.Content>
       </Card>

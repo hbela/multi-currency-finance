@@ -7,7 +7,7 @@ import { TransactionItem } from '@/src/components/TransactionItem';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { Transaction } from '@/src/types';
 import { formatDateLabel } from '@/src/utils/date';
-import { getFormatLocale } from '@/src/utils/format';
+import { useLocaleStore } from '@/src/store/localeStore';
 import { useAppTheme } from '@/src/theme';
 import { useTranslation } from 'react-i18next';
 
@@ -21,9 +21,9 @@ export default function TransactionsScreen() {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const items = useTransactionStore((s) => s.items);
+  const { locale } = useLocaleStore();
 
   const sections = useMemo<Section[]>(() => {
-    const locale = getFormatLocale();
     const todayLabel = t('dashboard.today');
     const yesterdayLabel = t('dashboard.yesterday');
     const groups = new Map<string, Transaction[]>();
@@ -37,7 +37,7 @@ export default function TransactionsScreen() {
       title: formatDateLabel(new Date(key).getTime(), locale, todayLabel, yesterdayLabel),
       data,
     }));
-  }, [items, t]);
+  }, [items, t, locale]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>

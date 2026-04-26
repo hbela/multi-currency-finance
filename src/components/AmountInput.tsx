@@ -1,40 +1,53 @@
 import React from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
 import { TextInput } from 'react-native-paper';
+import CurrencyInput from 'react-native-currency-input';
+import { decimalsFor, getInputFormat } from '../utils/format';
 
 interface Props {
-  value: string;
-  onChangeText: (v: string) => void;
-  currency?: string;
+  value: number | null;
+  onChangeValue: (v: number | null) => void;
+  currency: string;
+  lang: string;
   label?: string;
   autoFocus?: boolean;
   style?: StyleProp<ViewStyle>;
+  error?: boolean;
 }
 
 export const AmountInput: React.FC<Props> = ({
   value,
-  onChangeText,
-  currency = 'USD',
+  onChangeValue,
+  currency,
+  lang,
   label = 'Amount',
   autoFocus,
   style,
+  error,
 }) => {
-  const handle = (text: string) => {
-    const cleaned = text.replace(/[^0-9.,]/g, '').replace(',', '.');
-    const parts = cleaned.split('.');
-    const normalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : cleaned;
-    onChangeText(normalized);
-  };
+  const { delimiter, separator } = getInputFormat(lang);
+  const precision = decimalsFor(currency);
+
   return (
-    <TextInput
-      mode="outlined"
-      label={label}
+    <CurrencyInput
       value={value}
-      onChangeText={handle}
-      keyboardType="decimal-pad"
-      autoFocus={autoFocus}
-      left={<TextInput.Affix text={currency} />}
-      style={style}
+      onChangeValue={onChangeValue}
+      delimiter={delimiter}
+      separator={separator}
+      precision={precision}
+      minValue={0}
+      renderTextInput={(props) => (
+        <TextInput
+          {...props}
+          mode="outlined"
+          label={label}
+          autoFocus={autoFocus}
+          style={style}
+          error={error}
+          left={<TextInput.Affix text={currency} />}
+          keyboardType="numeric"
+        />
+      )}
     />
   );
 };

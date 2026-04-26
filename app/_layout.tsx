@@ -9,6 +9,7 @@ import {
   DefaultTheme as NavLightTheme,
   ThemeProvider,
 } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -28,6 +29,8 @@ import i18n from '@/src/i18n';
 import { getSetting } from '@/src/db/settings';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+const queryClient = new QueryClient();
 
 const { LightTheme: NavLight, DarkTheme: NavDark } = adaptNavigationTheme({
   reactNavigationLight: NavLightTheme,
@@ -79,6 +82,7 @@ export default function RootLayout() {
   const navTheme = isDark ? NavDark : NavLight;
 
   return (
+    <QueryClientProvider client={queryClient}>
     <SafeAreaProvider>
       <PaperProvider theme={paperTheme}>
         <ScreenshotProvider>
@@ -100,5 +104,6 @@ export default function RootLayout() {
         </ScreenshotProvider>
       </PaperProvider>
     </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }

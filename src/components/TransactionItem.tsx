@@ -3,10 +3,12 @@ import { List } from 'react-native-paper';
 import { Transaction, TransactionType } from '../types';
 import { useCategoryStore } from '../store/categoryStore';
 import { useAccountStore } from '../store/accountStore';
-import { formatSigned } from '../utils/format';
+import { useLocaleStore } from '../store/localeStore';
+import { formatMoney } from '../utils/format';
 import { useAppTheme } from '../theme';
 
-const POSITIVE_TYPES: TransactionType[] = ['INCOME', 'LOAN_RECEIVED', 'INVESTMENT_SELL' /*, 'DIVIDEND', 'INTEREST' */];
+const POSITIVE_TYPES: TransactionType[] = ['INCOME', 'LOAN_RECEIVED', 'INVESTMENT_SELL'];
+const signFor = (type: TransactionType) => (POSITIVE_TYPES.includes(type) ? '+' : '-');
 
 interface Props {
   transaction: Transaction;
@@ -15,6 +17,7 @@ interface Props {
 
 export const TransactionItem: React.FC<Props> = ({ transaction, onPress }) => {
   const theme = useAppTheme();
+  const { lang } = useLocaleStore();
   const category = useCategoryStore((s) => s.byId(transaction.categoryId));
   const account = useAccountStore((s) =>
     transaction.accountId ? s.items.find((a) => a.id === transaction.accountId) : undefined
@@ -32,7 +35,7 @@ export const TransactionItem: React.FC<Props> = ({ transaction, onPress }) => {
       left={(props) => <List.Icon {...props} icon={category?.icon ?? 'cash'} />}
       right={() => (
         <List.Subheader style={{ color, fontWeight: '600' }}>
-          {formatSigned(transaction.amountBase, transaction.type, transaction.baseCurrency)}
+          {`${signFor(transaction.type)}${formatMoney(Math.abs(parseFloat(transaction.amountBase)), lang, transaction.baseCurrency)}`}
         </List.Subheader>
       )}
       onPress={onPress ? () => onPress(transaction) : undefined}

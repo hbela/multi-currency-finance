@@ -6,7 +6,6 @@ import en from './locales/en';
 import hu from './locales/hu';
 import de from './locales/de';
 import fr from './locales/fr';
-import { setFormatLocale } from '../utils/format';
 
 let deviceLang = 'en';
 try {
@@ -28,8 +27,5 @@ i18n.use(initReactI18next).init({
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 });
-
-setFormatLocale(lng);
-i18n.on('languageChanged', setFormatLocale);
 
 export default i18n;

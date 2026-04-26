@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { CategoryBreakdownRow } from '../db/transactions';
 import { useCategoryStore } from '../store/categoryStore';
 import { useAppTheme } from '../theme';
-import { formatCurrency } from '../utils/format';
+import { useMoneyFormatter } from '../hooks/useFormattedAmount';
 
 interface Props {
   rows: CategoryBreakdownRow[];
@@ -16,6 +16,7 @@ interface Props {
 export const CategoryBreakdownChart: React.FC<Props> = ({ rows, currency = 'USD' }) => {
   const theme = useAppTheme();
   const { t } = useTranslation();
+  const fmt = useMoneyFormatter(currency);
   const byId = useCategoryStore((s) => s.byId);
   const total = rows.reduce((acc, r) => acc + r.total, 0);
   const max = rows.reduce((acc, r) => Math.max(acc, r.total), 0);
@@ -53,7 +54,7 @@ export const CategoryBreakdownChart: React.FC<Props> = ({ rows, currency = 'USD'
           })}
         </View>
         <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-          {formatCurrency(total, currency)}
+          {fmt(total)}
         </Text>
       </View>
 
@@ -79,7 +80,7 @@ export const CategoryBreakdownChart: React.FC<Props> = ({ rows, currency = 'USD'
                   {share.toFixed(0)}%
                 </Text>
                 <Text variant="bodyMedium" style={{ minWidth: 88, textAlign: 'right' }}>
-                  {formatCurrency(r.total, currency)}
+                  {fmt(r.total)}
                 </Text>
               </View>
               <View
