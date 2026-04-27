@@ -177,8 +177,8 @@ export const getMonthlySummary = async (year: number, month: number): Promise<Mo
   const { start, end } = monthRange(monthStr);
   const row = await db.getFirstAsync<{ income: number | null; expense: number | null }>(
     `SELECT
-       COALESCE(SUM(CASE WHEN type IN ('INCOME','LOAN_RECEIVED') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
-       COALESCE(SUM(CASE WHEN type IN ('EXPENSE') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
+       COALESCE(SUM(CASE WHEN type IN ('INCOME','LOAN_RECEIVED','INVESTMENT_SELL') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
+       COALESCE(SUM(CASE WHEN type IN ('EXPENSE','LOAN_REPAYMENT','INVESTMENT_BUY') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
      FROM transactions WHERE date >= ? AND date < ?`,
     [start, end]
   );
@@ -283,8 +283,8 @@ export const getMonthlyTotalsSeries = async (months: string[]): Promise<MonthlyS
   const { end } = monthRange(months[months.length - 1]);
   const rows = await db.getAllAsync<{ month: string; income: number | null; expense: number | null }>(
     `SELECT strftime('%Y-%m', date / 1000, 'unixepoch', 'localtime') AS month,
-       COALESCE(SUM(CASE WHEN type IN ('INCOME') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
-       COALESCE(SUM(CASE WHEN type IN ('EXPENSE') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
+       COALESCE(SUM(CASE WHEN type IN ('INCOME','LOAN_RECEIVED','INVESTMENT_SELL') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
+       COALESCE(SUM(CASE WHEN type IN ('EXPENSE','LOAN_REPAYMENT','INVESTMENT_BUY') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense
      FROM transactions WHERE date >= ? AND date < ?
      GROUP BY month`,
     [start, end]
@@ -301,18 +301,23 @@ export interface CategoryBreakdownRow {
   total: number;
 }
 
+const EXPENSE_TYPES = ['EXPENSE', 'LOAN_REPAYMENT', 'INVESTMENT_BUY'] as const;
+const INCOME_TYPES  = ['INCOME', 'LOAN_RECEIVED', 'INVESTMENT_SELL'] as const;
+
 export const getCategoryBreakdown = async (
   month: string,
   type: TransactionType
 ): Promise<CategoryBreakdownRow[]> => {
   const { start, end } = monthRange(month);
+  const types = type === 'EXPENSE' ? EXPENSE_TYPES : type === 'INCOME' ? INCOME_TYPES : [type];
+  const placeholders = types.map(() => '?').join(', ');
   return db.getAllAsync<CategoryBreakdownRow>(
     `SELECT categoryId AS category_id, SUM(CAST(amountBase AS REAL)) AS total
      FROM transactions
-     WHERE date >= ? AND date < ? AND type = ?
+     WHERE date >= ? AND date < ? AND type IN (${placeholders})
      GROUP BY categoryId
      ORDER BY total DESC`,
-    [start, end, type]
+    [start, end, ...types]
   );
 };
 

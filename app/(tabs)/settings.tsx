@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import {
   Button,
   Chip,
@@ -27,6 +28,7 @@ import { exportDatabaseAsCsv } from '@/src/utils/exportCsv';
 export default function SettingsScreen() {
   const theme = useAppTheme();
   const { t, i18n } = useTranslation();
+  const router = useRouter();
 
   const accounts = useAccountStore((s) => s.items);
   const addAccount = useAccountStore((s) => s.add);
@@ -57,6 +59,9 @@ export default function SettingsScreen() {
   const handleToggleWelcome = async (value: boolean) => {
     setShowWelcome(value);
     await setSetting('show_welcome', value ? 'true' : 'false');
+    if (value) {
+      router.push('/welcome');
+    }
   };
 
   const handleExportCsv = async () => {
@@ -265,7 +270,7 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
-      <Portal>
+<Portal>
         <Dialog visible={accountOpen} onDismiss={() => setAccountOpen(false)}>
           <Dialog.Title>{t('settings.newAccount')}</Dialog.Title>
           <Dialog.Content style={{ gap: 12 }}>
@@ -324,3 +329,4 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
+

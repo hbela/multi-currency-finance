@@ -7,7 +7,7 @@ const reversedWebClientId =
 
 /** @type {import('expo/config').ExpoConfig} */
 export default {
-  name: "Budget",
+  name: "Standalone Budget Manager",
   slug: "standalone-budget",
   version: "1.0.0",
   orientation: "portrait",
@@ -16,7 +16,7 @@ export default {
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   android: {
-    googleServicesFile: "./google-services.json",
+    googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
     permissions: ["RECORD_AUDIO", "android.permission.RECORD_AUDIO"],
     adaptiveIcon: {
       backgroundColor: "#006874",
@@ -30,7 +30,7 @@ export default {
   },
   ios: {
     supportsTablet: true,
-    googleServicesFile: "./GoogleService-Info.plist",
+    googleServicesFile: process.env.GOOGLE_SERVICES_PLIST ?? "./GoogleService-Info.plist",
     infoPlist: {
       NSSpeechRecognitionUsageDescription:
         "Allow Budget to use speech recognition for voice input.",

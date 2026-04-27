@@ -9,6 +9,7 @@ import { useBudgetStore } from '@/src/store/budgetStore';
 import { useCategoryStore } from '@/src/store/categoryStore';
 import { useAccountStore } from '@/src/store/accountStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
+import { useLocaleStore } from '@/src/store/localeStore';
 import { getBudgetProgressForMonth } from '@/src/db/budgets';
 import { BudgetProgress } from '@/src/types';
 import { monthKey } from '@/src/utils/date';
@@ -26,9 +27,10 @@ export default function BudgetsScreen() {
   const [rows, setRows] = useState<BudgetProgress[]>([]);
   const [open, setOpen] = useState(false);
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState<number | null>(null);
 
   const currency = accounts[0]?.currency ?? 'USD';
+  const lang = useLocaleStore((s) => s.lang);
   const month = monthKey();
 
   const refresh = useCallback(async () => {
@@ -40,12 +42,11 @@ export default function BudgetsScreen() {
   }, [refresh, budgets, transactions]);
 
   const submit = async () => {
-    const parsed = parseFloat(amount);
-    if (!categoryId || !Number.isFinite(parsed) || parsed <= 0) return;
-    await addBudget({ category_id: categoryId, amount: parsed, month });
+    if (!categoryId || !amount || amount <= 0) return;
+    await addBudget({ category_id: categoryId, amount, month });
     setOpen(false);
     setCategoryId(null);
-    setAmount('');
+    setAmount(null);
   };
 
   return (
@@ -79,7 +80,7 @@ export default function BudgetsScreen() {
               onChange={setCategoryId}
               type="EXPENSE"
             />
-            <AmountInput value={amount} onChangeText={setAmount} currency={currency} label={t('budgets.monthlyLimit')} />
+            <AmountInput value={amount} onChangeValue={setAmount} currency={currency} lang={lang} label={t('budgets.monthlyLimit')} />
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setOpen(false)}>{t('common.cancel')}</Button>

@@ -15,6 +15,32 @@ type Feature = {
   descKey: string;
 };
 
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  scroll: { paddingHorizontal: 24 },
+  header: { alignItems: 'center', marginBottom: 28 },
+  iconRing: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  appIcon: { width: 116, height: 116 },
+  title: { fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
+  subtitle: { textAlign: 'center', lineHeight: 22 },
+  features: { gap: 12, marginBottom: 28 },
+  card: { borderRadius: 12 },
+  cardContent: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
+  cardText: { flex: 1, gap: 3 },
+  hint: { textAlign: 'center', fontStyle: 'italic', marginBottom: 20 },
+  cta: { borderRadius: 8 },
+  ctaContent: { height: 48 },
+});
+
 const FEATURES: Feature[] = [
   { icon: 'swap-horizontal', titleKey: 'welcome.feature1Title', descKey: 'welcome.feature1Desc' },
   { icon: 'wallet-outline', titleKey: 'welcome.feature2Title', descKey: 'welcome.feature2Desc' },
@@ -95,29 +121,3 @@ export default function WelcomeScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { paddingHorizontal: 24 },
-  header: { alignItems: 'center', marginBottom: 28 },
-  iconRing: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
-  appIcon: { width: 116, height: 116 },
-  title: { fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
-  subtitle: { textAlign: 'center', lineHeight: 22 },
-  features: { gap: 12, marginBottom: 28 },
-  card: { borderRadius: 12 },
-  cardContent: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
-  cardText: { flex: 1, gap: 3 },
-  hint: { textAlign: 'center', fontStyle: 'italic', marginBottom: 20 },
-  cta: { borderRadius: 8 },
-  ctaContent: { height: 48 },
-});
