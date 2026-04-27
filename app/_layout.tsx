@@ -1,34 +1,36 @@
-import { Stack, useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
-import { PaperProvider, adaptNavigationTheme } from 'react-native-paper';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   DarkTheme as NavDarkTheme,
   DefaultTheme as NavLightTheme,
   ThemeProvider,
 } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Stack, useRouter } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
+import { PaperProvider, adaptNavigationTheme } from 'react-native-paper';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { ScreenshotProvider } from '@/src/context/ScreenshotContext';
 import ScreenshotStatusSnackbar from '@/src/components/ScreenshotStatusSnackbar';
+import { ScreenshotProvider } from '@/src/context/ScreenshotContext';
+import { resetDatabase } from '@/src/db/db';
 import { runMigrations } from '@/src/db/migrations';
 import { seedIfEmpty } from '@/src/db/seed';
-import { useAccountStore } from '@/src/store/accountStore';
-import { useCategoryStore } from '@/src/store/categoryStore';
-import { useTransactionStore } from '@/src/store/transactionStore';
-import { useBudgetStore } from '@/src/store/budgetStore';
-import { useThemeStore } from '@/src/store/themeStore';
+import { getSetting } from '@/src/db/settings';
 import { processRecurringTransactions } from '@/src/db/transactions';
+import i18n from '@/src/i18n';
+import { useAccountStore } from '@/src/store/accountStore';
+import { useBudgetStore } from '@/src/store/budgetStore';
+import { useCategoryStore } from '@/src/store/categoryStore';
+import { useThemeStore } from '@/src/store/themeStore';
+import { useTransactionStore } from '@/src/store/transactionStore';
 import { darkTheme, lightTheme } from '@/src/theme';
 import { useTranslation } from 'react-i18next';
-import i18n from '@/src/i18n';
-import { getSetting } from '@/src/db/settings';
 
-SplashScreen.preventAutoHideAsync().catch(() => {});
+
+SplashScreen.preventAutoHideAsync().catch(() => { });
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,7 @@ export default function RootLayout() {
     (async () => {
       try {
         await runMigrations();
+        await resetDatabase();
         await seedIfEmpty();
         await processRecurringTransactions();
         const savedLang = await getSetting('app_language');
@@ -73,7 +76,7 @@ export default function RootLayout() {
         setShowWelcome(welcomeSetting !== 'false');
       } finally {
         setReady(true);
-        SplashScreen.hideAsync().catch(() => {});
+        SplashScreen.hideAsync().catch(() => { });
       }
     })();
   }, []);
@@ -93,28 +96,28 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-    <SafeAreaProvider>
-      <PaperProvider theme={paperTheme}>
-        <ScreenshotProvider>
-        <ThemeProvider value={navTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="welcome" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="transaction/new"
-              options={{ presentation: 'modal', title: t('nav.newTransaction') }}
-            />
-            <Stack.Screen
-              name="transaction/[id]"
-              options={{ presentation: 'modal', title: t('nav.editTransaction') }}
-            />
-          </Stack>
-          <StatusBar style="auto" />
-          <ScreenshotStatusSnackbar />
-        </ThemeProvider>
-        </ScreenshotProvider>
-      </PaperProvider>
-    </SafeAreaProvider>
+      <SafeAreaProvider>
+        <PaperProvider theme={paperTheme}>
+          <ScreenshotProvider>
+            <ThemeProvider value={navTheme}>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="welcome" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="transaction/new"
+                  options={{ presentation: 'modal', title: t('nav.newTransaction') }}
+                />
+                <Stack.Screen
+                  name="transaction/[id]"
+                  options={{ presentation: 'modal', title: t('nav.editTransaction') }}
+                />
+              </Stack>
+              <StatusBar style="auto" />
+              <ScreenshotStatusSnackbar />
+            </ThemeProvider>
+          </ScreenshotProvider>
+        </PaperProvider>
+      </SafeAreaProvider>
     </QueryClientProvider>
   );
 }

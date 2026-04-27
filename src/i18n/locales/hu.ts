@@ -70,6 +70,7 @@ const hu: Translations = {
     settings: 'Beállítások',
     newTransaction: 'Új tranzakció',
     editTransaction: 'Tranzakció szerkesztése',
+    support: 'Támogatás',
   },
   dashboard: {
     recentTransactions: 'Legutóbbi tranzakciók',
@@ -168,6 +169,25 @@ const hu: Translations = {
     no: 'Nem',
     delete: 'Törlés',
     ok: 'OK',
+  },
+  support: {
+    title: 'Támogasd az appot',
+    alreadySupported: '☕ Köszönöm a támogatást!',
+    transparencyIntro: 'Ezt az appot egy fejlesztő készíti, és mindig ingyenes marad.',
+    noAds: 'Nincs hirdetés',
+    noTracking: 'Nincs követés',
+    noSubscriptions: 'Nincs előfizetés',
+    noHiddenFees: 'Nincs rejtett díj',
+    supportMessage: 'Ha hasznosnak találod, egy kávé segít fenntartani és fejleszteni az appot.',
+    coffeeSmall: 'Kis kávé',
+    coffeeMedium: 'Közepes kávé',
+    coffeeLarge: 'Nagy kávé',
+    notAvailable: 'Az alkalmazáson belüli vásárlás nem érhető el ezen az eszközön.',
+    thankYouSnackbar: 'Nagyon köszönöm! ☕',
+    restoreSuccess: 'Vásárlás visszaállítva – köszönöm!',
+    restoreNone: 'Nem találtam korábbi vásárlást.',
+    restorePurchases: 'Vásárlások visszaállítása',
+    thankYouFooter: 'Köszönöm, hogy használod az appot ♥',
   },
 };
 

@@ -75,6 +75,16 @@ export default function TabLayout() {
           headerRight: () => <ScreenshotCaptureButton screenName="settings" />,
         }}
       />
+      <Tabs.Screen
+        name="support"
+        options={{
+          title: t('nav.support'),
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="heart" color={color} size={size} />
+          ),
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }

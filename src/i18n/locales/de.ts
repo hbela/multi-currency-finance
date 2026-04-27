@@ -70,6 +70,7 @@ const de: Translations = {
     settings: 'Einstellungen',
     newTransaction: 'Neue Transaktion',
     editTransaction: 'Transaktion bearbeiten',
+    support: 'Unterstützen',
   },
   dashboard: {
     recentTransactions: 'Letzte Transaktionen',
@@ -168,6 +169,25 @@ const de: Translations = {
     no: 'Nein',
     delete: 'Löschen',
     ok: 'OK',
+  },
+  support: {
+    title: 'App unterstützen',
+    alreadySupported: '☕ Vielen Dank für deine Unterstützung!',
+    transparencyIntro: 'Diese App wird von einem einzelnen Entwickler gepflegt und bleibt immer kostenlos.',
+    noAds: 'Keine Werbung',
+    noTracking: 'Kein Tracking',
+    noSubscriptions: 'Kein Abo',
+    noHiddenFees: 'Keine versteckten Kosten',
+    supportMessage: 'Wenn dir die App nützlich ist, hilft ein Kaffee dabei, sie zu erhalten und weiterzuentwickeln.',
+    coffeeSmall: 'Kleiner Kaffee',
+    coffeeMedium: 'Mittlerer Kaffee',
+    coffeeLarge: 'Großer Kaffee',
+    notAvailable: 'In-App-Käufe sind auf diesem Gerät nicht verfügbar.',
+    thankYouSnackbar: 'Vielen herzlichen Dank! ☕',
+    restoreSuccess: 'Kauf wiederhergestellt – danke!',
+    restoreNone: 'Keine früheren Käufe gefunden.',
+    restorePurchases: 'Käufe wiederherstellen',
+    thankYouFooter: 'Danke, dass du die App nutzt ♥',
   },
 };
 

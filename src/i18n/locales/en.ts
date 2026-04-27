@@ -34,7 +34,7 @@ export type Translations = {
   form: { save: string; delete: string; addTransaction: string; saveChanges: string };
   nav: {
     dashboard: string; transactions: string; budgets: string; reports: string; settings: string;
-    newTransaction: string; editTransaction: string;
+    newTransaction: string; editTransaction: string; support: string;
   };
   dashboard: {
     recentTransactions: string;
@@ -77,6 +77,25 @@ export type Translations = {
     errorAmount: string; errorStartDate: string; errorEndDate: string; errorEndBeforeStart: string;
   };
   common: { cancel: string; save: string; yes: string; no: string; delete: string; ok: string };
+  support: {
+    title: string;
+    alreadySupported: string;
+    transparencyIntro: string;
+    noAds: string;
+    noTracking: string;
+    noSubscriptions: string;
+    noHiddenFees: string;
+    supportMessage: string;
+    coffeeSmall: string;
+    coffeeMedium: string;
+    coffeeLarge: string;
+    notAvailable: string;
+    thankYouSnackbar: string;
+    restoreSuccess: string;
+    restoreNone: string;
+    restorePurchases: string;
+    thankYouFooter: string;
+  };
 };
 
 const en: Translations = {
@@ -149,6 +168,7 @@ const en: Translations = {
     settings: 'Settings',
     newTransaction: 'New transaction',
     editTransaction: 'Edit transaction',
+    support: 'Support',
   },
   dashboard: {
     recentTransactions: 'Recent transactions',
@@ -247,6 +267,25 @@ const en: Translations = {
     no: 'No',
     delete: 'Delete',
     ok: 'OK',
+  },
+  support: {
+    title: 'Support the App',
+    alreadySupported: '☕ Thank you for your support!',
+    transparencyIntro: 'This app is built by a solo developer and will always be free.',
+    noAds: 'No ads',
+    noTracking: 'No tracking',
+    noSubscriptions: 'No subscriptions',
+    noHiddenFees: 'No hidden fees',
+    supportMessage: 'If you find it useful, buying me a coffee helps keep it maintained and growing.',
+    coffeeSmall: 'Small coffee',
+    coffeeMedium: 'Medium coffee',
+    coffeeLarge: 'Large coffee',
+    notAvailable: 'In-app purchases are not available on this device.',
+    thankYouSnackbar: 'Thank you so much! ☕',
+    restoreSuccess: 'Purchase restored — thank you!',
+    restoreNone: 'No previous purchases found.',
+    restorePurchases: 'Restore purchases',
+    thankYouFooter: 'Thank you for using the app ♥',
   },
 };
 
