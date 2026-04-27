@@ -59,6 +59,17 @@ export type Translations = {
     screenshotCount_one: string; screenshotCount_other: string;
     uploadToDrive: string; clear: string;
     language: string; languageLabel: string; version: string;
+    welcomeScreen: string; welcomeScreenDesc: string;
+  };
+  welcome: {
+    title: string; subtitle: string;
+    feature1Title: string; feature1Desc: string;
+    feature2Title: string; feature2Desc: string;
+    feature3Title: string; feature3Desc: string;
+    feature4Title: string; feature4Desc: string;
+    feature5Title: string; feature5Desc: string;
+    feature6Title: string; feature6Desc: string;
+    disableHint: string; getStarted: string;
   };
   recurring: {
     frequency: string; weekly: string; monthly: string; yearly: string;
@@ -194,6 +205,26 @@ const en: Translations = {
     language: 'Language',
     languageLabel: 'App language',
     version: 'FlexFinance · v2.0 · offline',
+    welcomeScreen: 'Welcome screen',
+    welcomeScreenDesc: 'Show welcome screen on next launch',
+  },
+  welcome: {
+    title: 'FlexFinance',
+    subtitle: 'Your personal finance companion — track, plan, and grow your money.',
+    feature1Title: 'Track Transactions',
+    feature1Desc: 'Log expenses, income, transfers, investments, and loans in one place.',
+    feature2Title: 'Multiple Accounts',
+    feature2Desc: 'Manage cash, bank, and card accounts with multi-currency support.',
+    feature3Title: 'Budget Planning',
+    feature3Desc: 'Set monthly budgets per category and monitor spending in real time.',
+    feature4Title: 'Reports & Insights',
+    feature4Desc: 'Visual charts show monthly trends, savings rate, and category breakdowns.',
+    feature5Title: 'Recurring Transactions',
+    feature5Desc: 'Automate regular payments — weekly, monthly, or yearly.',
+    feature6Title: 'Works Offline',
+    feature6Desc: 'All data lives on your device. No account, no cloud required.',
+    disableHint: 'You can disable this screen any time in Settings.',
+    getStarted: 'Get started',
   },
   recurring: {
     frequency: 'Frequency',

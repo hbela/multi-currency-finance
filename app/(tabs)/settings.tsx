@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import {
   Button,
@@ -10,6 +10,7 @@ import {
   Portal,
   SegmentedButtons,
   Snackbar,
+  Switch,
   Text,
   TextInput,
 } from 'react-native-paper';
@@ -18,7 +19,7 @@ import { useScreenshot, DEVICE_DIMENSIONS, DeviceType } from '@/src/context/Scre
 import { useAccountStore } from '@/src/store/accountStore';
 import { useCategoryStore } from '@/src/store/categoryStore';
 import { useThemeStore, ThemeMode } from '@/src/store/themeStore';
-import { setSetting } from '@/src/db/settings';
+import { getSetting, setSetting } from '@/src/db/settings';
 import { AccountType, TransactionType } from '@/src/types';
 import { useAppTheme } from '@/src/theme';
 import { exportDatabaseAsCsv } from '@/src/utils/exportCsv';
@@ -45,8 +46,18 @@ export default function SettingsScreen() {
     clearAllScreenshots,
   } = useScreenshot();
 
+  const [showWelcome, setShowWelcome] = useState(true);
   const [exportingCsv, setExportingCsv] = useState(false);
   const [exportSnackbar, setExportSnackbar] = useState<{ visible: boolean; message: string; error: boolean }>({ visible: false, message: '', error: false });
+
+  useEffect(() => {
+    getSetting('show_welcome').then((val) => setShowWelcome(val !== 'false'));
+  }, []);
+
+  const handleToggleWelcome = async (value: boolean) => {
+    setShowWelcome(value);
+    await setSetting('show_welcome', value ? 'true' : 'false');
+  };
 
   const handleExportCsv = async () => {
     setExportingCsv(true);
@@ -107,6 +118,14 @@ export default function SettingsScreen() {
             ]}
           />
         </View>
+        <List.Item
+          title={t('settings.welcomeScreen')}
+          description={t('settings.welcomeScreenDesc')}
+          left={(p) => <List.Icon {...p} icon="hand-wave" />}
+          right={() => (
+            <Switch value={showWelcome} onValueChange={handleToggleWelcome} />
+          )}
+        />
       </List.Section>
 
       <Divider />

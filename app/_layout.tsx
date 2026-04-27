@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
@@ -47,7 +47,9 @@ export default function RootLayout() {
   const systemScheme = useColorScheme();
   const themeMode = useThemeStore((s) => s.mode);
   const { t } = useTranslation();
+  const router = useRouter();
   const [ready, setReady] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -67,12 +69,20 @@ export default function RootLayout() {
           useBudgetStore.getState().load(),
           useThemeStore.getState().load(),
         ]);
+        const welcomeSetting = await getSetting('show_welcome');
+        setShowWelcome(welcomeSetting !== 'false');
       } finally {
         setReady(true);
         SplashScreen.hideAsync().catch(() => {});
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (ready && showWelcome) {
+      router.replace('/welcome');
+    }
+  }, [ready, showWelcome]);
 
   if (!ready) return null;
 
@@ -89,6 +99,7 @@ export default function RootLayout() {
         <ThemeProvider value={navTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="welcome" options={{ headerShown: false }} />
             <Stack.Screen
               name="transaction/new"
               options={{ presentation: 'modal', title: t('nav.newTransaction') }}

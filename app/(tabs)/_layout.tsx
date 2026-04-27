@@ -72,6 +72,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="cog" color={color} size={size} />
           ),
+          headerRight: () => <ScreenshotCaptureButton screenName="settings" />,
         }}
       />
     </Tabs>

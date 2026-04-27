@@ -1,9 +1,9 @@
-const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID ?? "";
+const WEB_CLIENT_ID = "13205155505-h8notg3rkd4bgr1151s4re3fn4s6u6f1.apps.googleusercontent.com";
+const webClientId = process.env.EXPO_PUBLIC_WEB_CLIENT_ID ?? WEB_CLIENT_ID;
 
 // Reversed web client ID: com.googleusercontent.apps.<project-number>-<hash>
-const reversedWebClientId = webClientId
-  ? "com.googleusercontent.apps." + webClientId.replace(".apps.googleusercontent.com", "")
-  : "";
+const reversedWebClientId =
+  "com.googleusercontent.apps." + webClientId.replace(".apps.googleusercontent.com", "");
 
 /** @type {import('expo/config').ExpoConfig} */
 export default {
@@ -20,7 +20,7 @@ export default {
     permissions: ["RECORD_AUDIO", "android.permission.RECORD_AUDIO"],
     adaptiveIcon: {
       backgroundColor: "#006874",
-      foregroundImage: "./assets/images/android-icon-foreground.png",
+      foregroundImage: "./assets/images/screen.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
@@ -50,8 +50,8 @@ export default {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#ffffff",
-        dark: { backgroundColor: "#000000" },
+        backgroundColor: "#006874",
+        dark: { backgroundColor: "#006874" },
       },
     ],
     "expo-sqlite",
@@ -78,5 +78,10 @@ export default {
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  extra: {
+    eas: {
+      projectId: "ba890362-4b67-4d6f-8b8a-fbd08588fc2f",
+    },
   },
 };

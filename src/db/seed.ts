@@ -87,12 +87,21 @@ export const seedIfEmpty = async (): Promise<void> => {
   const cashId = accIds['Készpénz'];
 
   // ── Helper ─────────────────────────────────────────────────────────────────
+  const ALLOWED_TXN_COLUMNS = new Set([
+    'id', 'type', 'date', 'amount', 'currency', 'amountBase', 'baseCurrency',
+    'exchangeRate', 'accountId', 'categoryId', 'relatedTransactionId',
+    'description', 'source', 'tags', 'notes', 'details', 'isRecurring',
+    'recurringRule', 'recurringParentId', 'status', 'createdAt', 'updatedAt',
+  ]);
+
   const insertTxn = async (fields: Record<string, unknown>) => {
     const cols = Object.keys(fields);
+    const unknown = cols.filter(c => !ALLOWED_TXN_COLUMNS.has(c));
+    if (unknown.length > 0) throw new Error(`insertTxn: unknown column(s): ${unknown.join(', ')}`);
     const placeholders = cols.map(() => '?').join(', ');
     await db.runAsync(
       `INSERT INTO transactions (${cols.join(', ')}) VALUES (${placeholders})`,
-      Object.values(fields) as (string | number | null)[]
+      cols.map(c => fields[c]) as (string | number | null)[]
     );
   };
 

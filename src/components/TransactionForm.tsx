@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Card, HelperText, TextInput } from 'react-native-paper';
+import { Button, Card, HelperText, Menu, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
@@ -16,10 +16,18 @@ import { Transaction, TransactionType } from '../types';
 import { useAppTheme } from '../theme';
 import { CreateTransactionInput } from '../db/transactions';
 import { useLocaleStore } from '../store/localeStore';
+import { useMoneyFormatter } from '../hooks/useFormattedAmount';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const BASE_CURRENCY = 'HUF';
+
+const CURRENCIES = [
+  { code: 'HUF', label: 'HUF – Forint' },
+  { code: 'EUR', label: 'EUR – Euro' },
+  { code: 'USD', label: 'USD – Dollar' },
+  { code: 'GBP', label: 'GBP – Pound' },
+];
 
 const ALL_TYPES: TransactionType[] = [
   'EXPENSE', 'INCOME', 'TRANSFER',
@@ -31,7 +39,7 @@ const ALL_TYPES: TransactionType[] = [
 
 const schema = z.object({
   type: z.enum(['EXPENSE', 'INCOME', 'TRANSFER', 'INVESTMENT_BUY', 'INVESTMENT_SELL', 'LOAN_RECEIVED', 'LOAN_REPAYMENT']),
-  amount: z.number({ invalid_type_error: 'Amount must be a positive number' })
+  amount: z.number({ message: 'Amount must be a positive number' })
     .positive({ message: 'Amount must be a positive number' })
     .nullable(),
   currency: z.string().min(1, 'Currency is required').max(8),
@@ -182,11 +190,12 @@ const TransferDetails: React.FC<TransferDetailFields> = (p) => {
 interface CurrencyRowProps {
   currency: string; onCurrency: (v: string) => void;
   exchangeRate: string; onExchangeRate: (v: string) => void;
-  amountBase: string;
+  amountBase: number | null;
   exchangeRateError?: string;
 }
 const CurrencyRow: React.FC<CurrencyRowProps> = (p) => {
   const { t } = useTranslation();
+  const fmt = useMoneyFormatter(BASE_CURRENCY);
   return (
     <Card>
       <Card.Title title={t('txn.sections.currency')} />
@@ -215,7 +224,7 @@ const CurrencyRow: React.FC<CurrencyRowProps> = (p) => {
         <TextInput
           mode="outlined"
           label={`${t('txn.fields.amountBase')} (${BASE_CURRENCY})`}
-          value={p.amountBase}
+          value={p.amountBase != null ? fmt(p.amountBase) : ''}
           editable={false}
           style={{ backgroundColor: 'transparent' }}
         />
@@ -238,6 +247,7 @@ export const TransactionForm: React.FC<Props> = ({
   const accounts = useAccountStore((s) => s.items);
   const categories = useCategoryStore((s) => s.items);
   const lang = useLocaleStore((s) => s.lang);
+  const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
 
   const initDetails = parseDetails(initial?.details ?? null);
   const accountCurrency =
@@ -344,9 +354,9 @@ export const TransactionForm: React.FC<Props> = ({
         const computedAmountBase = (() => {
           const a = values.amount;
           const r = parseFloat(values.exchangeRate);
-          if (a == null || !Number.isFinite(a) || !Number.isFinite(r) || r === 0) return '';
-          if (values.currency === BASE_CURRENCY) return String(a);
-          return String(Math.round(a * r));
+          if (a == null || !Number.isFinite(a) || !Number.isFinite(r) || r === 0) return null;
+          if (values.currency === BASE_CURRENCY) return a;
+          return Math.round(a * r);
         })();
 
         return (
@@ -385,14 +395,29 @@ export const TransactionForm: React.FC<Props> = ({
                     />
                     <form.Field name="currency">
                       {(cField) => (
-                        <TextInput
-                          mode="outlined"
-                          label={t('txn.fields.currency')}
-                          value={cField.state.value}
-                          onChangeText={cField.handleChange}
-                          style={{ width: 80 }}
-                          autoCapitalize="characters"
-                        />
+                        <Menu
+                          visible={currencyMenuOpen}
+                          onDismiss={() => setCurrencyMenuOpen(false)}
+                          anchor={
+                            <Button
+                              mode="outlined"
+                              onPress={() => setCurrencyMenuOpen(true)}
+                              style={{ minWidth: 90 }}>
+                              {cField.state.value || 'Currency'}
+                            </Button>
+                          }>
+                          {CURRENCIES.map((c) => (
+                            <Menu.Item
+                              key={c.code}
+                              title={c.label}
+                              trailingIcon={cField.state.value === c.code ? 'check' : undefined}
+                              onPress={() => {
+                                cField.handleChange(c.code);
+                                setCurrencyMenuOpen(false);
+                              }}
+                            />
+                          ))}
+                        </Menu>
                       )}
                     </form.Field>
                   </View>
