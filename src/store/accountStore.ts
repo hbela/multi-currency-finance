@@ -6,7 +6,7 @@ interface AccountStore {
   items: Account[];
   loading: boolean;
   load: () => Promise<void>;
-  add: (input: { name: string; type: AccountType; currency: string; icon?: string | null; color?: string | null; notes?: string | null }) => Promise<Account>;
+  add: (input: { name: string; type: AccountType; currency: string; institution?: string | null; icon?: string | null; color?: string | null; notes?: string | null }) => Promise<Account>;
   update: (row: Account) => Promise<void>;
   remove: (id: string) => Promise<void>;
   deactivate: (id: string) => Promise<void>;

@@ -46,6 +46,26 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="accounts"
+        options={{
+          title: t('nav.accounts'),
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="bank" color={color} size={size} />
+          ),
+          headerRight: () => <ScreenshotCaptureButton screenName="accounts" />,
+        }}
+      />
+      <Tabs.Screen
+        name="investments"
+        options={{
+          title: t('nav.investments'),
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="chart-line" color={color} size={size} />
+          ),
+          headerRight: () => <ScreenshotCaptureButton screenName="investments" />,
+        }}
+      />
+      <Tabs.Screen
         name="budgets"
         options={{
           title: t('nav.budgets'),

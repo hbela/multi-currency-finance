@@ -38,6 +38,7 @@ export interface Account {
   icon: string | null;
   color: string | null;
   notes: string | null;
+  institution: string | null;
   created_at: number;
 }
 
@@ -74,6 +75,12 @@ export interface Transaction {
   status: TransactionStatus;
   createdAt: number;
   updatedAt: number;
+  // v7 fields
+  fromAccountId: string | null;
+  toAccountId: string | null;
+  receivedAmount: string | null;
+  country: string | null;
+  city: string | null;
 }
 
 export interface Budget {
@@ -123,4 +130,98 @@ export interface TransactionFilters {
   dateFrom?: number;
   dateTo?: number;
   search?: string;
+}
+
+// ── v7: new entities ──────────────────────────────────────────────────────────
+
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  isBase: number;
+  isActive: number;
+  created_at: number;
+}
+
+export interface ExchangeRate {
+  id: string;
+  fromCode: string;
+  toCode: string;
+  rate: string;
+  source: 'manual' | 'api';
+  date: number;
+  created_at: number;
+}
+
+export type AssetClass = 'stock' | 'etf' | 'crypto' | 'bond' | 'other';
+
+export interface Asset {
+  id: string;
+  symbol: string;
+  name: string;
+  assetClass: AssetClass;
+  currency: string;
+  exchange: string | null;
+  created_at: number;
+}
+
+export interface Holding {
+  id: string;
+  assetId: string;
+  accountId: string;
+  quantity: string;
+  avgCostBasis: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface HoldingWithAsset extends Holding {
+  asset: Asset;
+  currentValue?: string;
+  unrealizedPnL?: string;
+}
+
+export type LoanType = 'mortgage' | 'personal' | 'auto' | 'student';
+
+export interface Loan {
+  id: string;
+  accountId: string;
+  name: string;
+  principalAmount: string;
+  currency: string;
+  interestRate: string;
+  startDate: number;
+  termMonths: number;
+  loanType: LoanType;
+  lender: string | null;
+  notes: string | null;
+  isActive: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface LoanPayment {
+  id: string;
+  loanId: string;
+  transactionId: string | null;
+  paymentDate: number;
+  principalPaid: string;
+  interestPaid: string;
+  totalPaid: string;
+  remainingBalance: string;
+  created_at: number;
+}
+
+export interface LedgerEntry {
+  id: string;
+  transactionId: string;
+  accountId: string;
+  amount: string;
+  currency: string;
+  amountBase: string;
+  baseCurrency: string;
+  exchangeRate: string;
+  entryType: 'debit' | 'credit';
+  created_at: number;
 }

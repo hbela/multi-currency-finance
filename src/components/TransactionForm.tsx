@@ -12,9 +12,12 @@ import { AccountPicker } from './AccountPicker';
 import { DictationButton } from './DictationButton';
 import { useAccountStore } from '../store/accountStore';
 import { useCategoryStore } from '../store/categoryStore';
+import { useAssetStore } from '../store/assetStore';
+import { useHoldingStore } from '../store/holdingStore';
 import { Transaction, TransactionType } from '../types';
 import { useAppTheme } from '../theme';
 import { CreateTransactionInput } from '../db/transactions';
+import { applyHoldingTransaction } from '../db/holdings';
 import { useLocaleStore } from '../store/localeStore';
 import { useMoneyFormatter } from '../hooks/useFormattedAmount';
 
@@ -48,6 +51,11 @@ const schema = z.object({
     { message: 'Exchange rate must be positive' }
   ),
   accountId: z.string().nullable(),
+  // Transfer-specific
+  fromAccountId: z.string().nullable(),
+  toAccountId: z.string().nullable(),
+  receivedAmount: z.string(),
+  toCurrency: z.string().max(8),
   categoryId: z.string().nullable(),
   description: z.string(),
   source: z.string(),
@@ -62,7 +70,7 @@ const schema = z.object({
   creditor: z.string(),
   interestRate: z.string(),
   remainingTerm: z.string(),
-  // Transfer fields
+  // Transfer detail fields
   counterparty: z.string(),
   reference: z.string(),
   transferFee: z.string(),
@@ -246,6 +254,8 @@ export const TransactionForm: React.FC<Props> = ({
   const insets = useSafeAreaInsets();
   const accounts = useAccountStore((s) => s.items);
   const categories = useCategoryStore((s) => s.items);
+  const { add: addAsset, items: assetItems } = useAssetStore();
+  const { load: reloadHoldings } = useHoldingStore();
   const lang = useLocaleStore((s) => s.lang);
   const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
 
@@ -261,6 +271,14 @@ export const TransactionForm: React.FC<Props> = ({
       currency: initial?.currency ?? accountCurrency,
       exchangeRate: initial?.exchangeRate ?? '1',
       accountId: initial?.accountId ?? accounts[0]?.id ?? null,
+      // Transfer-specific
+      fromAccountId: initial?.fromAccountId ?? accounts[0]?.id ?? null,
+      toAccountId: initial?.toAccountId ?? null,
+      receivedAmount: initial?.receivedAmount ?? '',
+      toCurrency: (() => {
+        const toAcc = accounts.find((a) => a.id === initial?.toAccountId);
+        return toAcc?.currency ?? '';
+      })(),
       categoryId: initial?.categoryId ?? null,
       description: initial?.description ?? '',
       source: initial?.source ?? '',
@@ -275,7 +293,7 @@ export const TransactionForm: React.FC<Props> = ({
       creditor: String(initDetails.creditor ?? ''),
       interestRate: initDetails.interest_rate != null ? String(initDetails.interest_rate) : '',
       remainingTerm: initDetails.remaining_term != null ? String(initDetails.remaining_term) : '',
-      // Transfer
+      // Transfer detail fields
       counterparty: String(initDetails.counterparty ?? ''),
       reference: String(initDetails.reference ?? ''),
       transferFee: initDetails.fee != null ? String(initDetails.fee) : '',
@@ -290,6 +308,7 @@ export const TransactionForm: React.FC<Props> = ({
     onSubmit: async ({ value }) => {
       const parsed = value.amount!;
       const rate = parseFloat(value.exchangeRate);
+      const isTransfer = value.type === 'TRANSFER';
       const amountBase =
         value.currency === BASE_CURRENCY
           ? String(parsed)
@@ -323,15 +342,21 @@ export const TransactionForm: React.FC<Props> = ({
         return {};
       };
 
+      const receivedAmt = value.receivedAmount.trim();
+      const txnType = value.type as TransactionType;
       await onSubmit({
-        type: value.type as TransactionType,
+        type: txnType,
         date: initial?.date ?? Date.now(),
         amount: String(parsed),
         currency: value.currency.trim() || BASE_CURRENCY,
         amountBase,
         baseCurrency: BASE_CURRENCY,
         exchangeRate: value.exchangeRate.trim() || '1',
-        accountId: value.accountId,
+        // For transfers, accountId = fromAccount (for back-compat); proper fields below.
+        accountId: isTransfer ? (value.fromAccountId ?? null) : value.accountId,
+        fromAccountId: isTransfer ? value.fromAccountId : null,
+        toAccountId: isTransfer ? value.toAccountId : null,
+        receivedAmount: isTransfer && receivedAmt ? receivedAmt : null,
         categoryId: value.categoryId,
         description: value.description.trim() || null,
         source: value.source.trim() || null,
@@ -339,6 +364,42 @@ export const TransactionForm: React.FC<Props> = ({
         details: buildDetails(),
         status: 'cleared',
       });
+
+      // Update holding position for investment transactions
+      if (
+        (txnType === 'INVESTMENT_BUY' || txnType === 'INVESTMENT_SELL') &&
+        value.symbol.trim() &&
+        value.quantity &&
+        value.price &&
+        value.accountId
+      ) {
+        const sym = value.symbol.trim().toUpperCase();
+        const cur = value.currency.trim() || BASE_CURRENCY;
+        let asset = assetItems.find(
+          (a) => a.symbol === sym && a.currency === cur
+        );
+        if (!asset) {
+          asset = await addAsset({
+            symbol: sym,
+            name: value.securityName.trim() || sym,
+            assetClass: 'stock',
+            currency: cur,
+            exchange: null,
+          });
+        }
+        const qty = parseFloat(value.quantity);
+        const price = parseFloat(value.price);
+        if (qty > 0 && price >= 0) {
+          await applyHoldingTransaction(
+            asset.id,
+            value.accountId,
+            qty,
+            price,
+            txnType === 'INVESTMENT_BUY'
+          );
+          await reloadHoldings();
+        }
+      }
     },
   });
 
@@ -439,15 +500,67 @@ export const TransactionForm: React.FC<Props> = ({
               )}
             </form.Field>
 
-            <form.Field name="accountId">
-              {(field) => (
-                <AccountPicker
-                  accounts={accounts}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                />
-              )}
-            </form.Field>
+            {/* Account picker(s) */}
+            {isTransfer ? (
+              <Card>
+                <Card.Title title={t('txn.sections.transfer')} />
+                <Card.Content style={{ gap: 12 }}>
+                  <form.Field name="fromAccountId">
+                    {(field) => (
+                      <AccountPicker
+                        accounts={accounts}
+                        value={field.state.value}
+                        onChange={(id) => {
+                          field.handleChange(id);
+                          const acc = accounts.find((a) => a.id === id);
+                          if (acc) form.setFieldValue('currency', acc.currency);
+                        }}
+                        label={t('txn.fields.fromAccount')}
+                      />
+                    )}
+                  </form.Field>
+                  <form.Field name="toAccountId">
+                    {(field) => (
+                      <AccountPicker
+                        accounts={accounts}
+                        value={field.state.value}
+                        onChange={(id) => {
+                          field.handleChange(id);
+                          const acc = accounts.find((a) => a.id === id);
+                          if (acc) form.setFieldValue('toCurrency', acc.currency);
+                        }}
+                        label={t('txn.fields.toAccount')}
+                      />
+                    )}
+                  </form.Field>
+                  <form.Field name="receivedAmount">
+                    {(field) => (
+                      <form.Subscribe selector={(s) => s.values.toCurrency}>
+                        {(toCur) => (
+                          <TextInput
+                            mode="outlined"
+                            label={`${t('txn.fields.receivedAmount')} (${toCur || '?'})`}
+                            value={field.state.value}
+                            onChangeText={field.handleChange}
+                            keyboardType="decimal-pad"
+                          />
+                        )}
+                      </form.Subscribe>
+                    )}
+                  </form.Field>
+                </Card.Content>
+              </Card>
+            ) : (
+              <form.Field name="accountId">
+                {(field) => (
+                  <AccountPicker
+                    accounts={accounts}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                  />
+                )}
+              </form.Field>
+            )}
 
             {/* Description */}
             <form.Field name="description">

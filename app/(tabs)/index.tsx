@@ -6,38 +6,44 @@ import { useRouter } from 'expo-router';
 import { SummaryCard } from '@/src/components/SummaryCard';
 import { TransactionItem } from '@/src/components/TransactionItem';
 import { useAccountStore } from '@/src/store/accountStore';
+import { useCurrencyStore } from '@/src/store/currencyStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { getMonthlySummary } from '@/src/db/transactions';
+import { computeNetWorthInBase } from '@/src/services/fx.service';
 import { useAppTheme } from '@/src/theme';
 import { useTranslation } from 'react-i18next';
-
-const BASE_CURRENCY = 'HUF';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const theme = useAppTheme();
   const { t } = useTranslation();
   const transactions = useTransactionStore((s) => s.items);
-  const getNetWorth = useAccountStore((s) => s.getNetWorth);
+  const accounts = useAccountStore((s) => s.items);
+  const baseCurrency = useCurrencyStore((s) => s.base);
+  const [netWorth, setNetWorth] = useState(0);
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
 
   useEffect(() => {
     (async () => {
       const now = new Date();
-      const summary = await getMonthlySummary(now.getFullYear(), now.getMonth() + 1);
+      const [summary, nw] = await Promise.all([
+        getMonthlySummary(now.getFullYear(), now.getMonth() + 1),
+        computeNetWorthInBase(accounts.map((a) => ({ id: a.id, currency: a.currency }))),
+      ]);
       setIncome(summary.income);
       setExpense(summary.expense);
+      setNetWorth(nw);
     })();
-  }, [transactions]);
+  }, [transactions, accounts]);
 
-  const netWorth = getNetWorth();
+  const displayCurrency = baseCurrency?.code ?? 'HUF';
   const recent = useMemo(() => transactions.slice(0, 10), [transactions]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>
-        <SummaryCard balance={netWorth} income={income} expense={expense} currency={BASE_CURRENCY} />
+        <SummaryCard balance={netWorth} income={income} expense={expense} currency={displayCurrency} />
         <List.Section>
           <List.Subheader>{t('dashboard.recentTransactions')}</List.Subheader>
           {recent.length === 0 ? (

@@ -14,6 +14,7 @@ export const createAccount = async (input: {
   name: string;
   type: AccountType;
   currency: string;
+  institution?: string | null;
   icon?: string | null;
   color?: string | null;
   notes?: string | null;
@@ -25,23 +26,24 @@ export const createAccount = async (input: {
     currency: input.currency,
     balance: '0',
     isActive: 1,
+    institution: input.institution ?? null,
     icon: input.icon ?? null,
     color: input.color ?? null,
     notes: input.notes ?? null,
     created_at: Date.now(),
   };
   await db.runAsync(
-    `INSERT INTO accounts (id, name, type, currency, balance, isActive, icon, color, notes, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [row.id, row.name, row.type, row.currency, row.balance, row.isActive, row.icon, row.color, row.notes, row.created_at]
+    `INSERT INTO accounts (id, name, type, currency, balance, isActive, institution, icon, color, notes, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [row.id, row.name, row.type, row.currency, row.balance, row.isActive, row.institution, row.icon, row.color, row.notes, row.created_at]
   );
   return row;
 };
 
 export const updateAccount = async (row: Account): Promise<void> => {
   await db.runAsync(
-    `UPDATE accounts SET name = ?, type = ?, currency = ?, icon = ?, color = ?, notes = ? WHERE id = ?`,
-    [row.name, row.type, row.currency, row.icon, row.color, row.notes, row.id]
+    `UPDATE accounts SET name = ?, type = ?, currency = ?, institution = ?, icon = ?, color = ?, notes = ? WHERE id = ?`,
+    [row.name, row.type, row.currency, row.institution, row.icon, row.color, row.notes, row.id]
   );
 };
 

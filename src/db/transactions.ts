@@ -29,6 +29,12 @@ export type CreateTransactionInput = {
   recurringRule?: RecurringRule | null;
   recurringParentId?: string | null;
   status?: Transaction['status'];
+  // v7 transfer fields
+  fromAccountId?: string | null;
+  toAccountId?: string | null;
+  receivedAmount?: string | null;
+  country?: string | null;
+  city?: string | null;
 };
 
 /** Returns +/- numeric delta for an account balance given a transaction type. */
@@ -53,11 +59,12 @@ export const getBalanceDelta = (type: TransactionType, amountBase: string): numb
   }
 };
 
-/** Atomically inserts a transaction and updates the account balance. */
+/** Atomically inserts a transaction and updates the account balance(s). */
 export const createTransactionWithBalanceUpdate = async (
   input: CreateTransactionInput
 ): Promise<Transaction> => {
   const now = Date.now();
+  const isTransfer = input.type === 'TRANSFER';
   const row: Transaction = {
     id: newId(),
     type: input.type,
@@ -67,7 +74,8 @@ export const createTransactionWithBalanceUpdate = async (
     amountBase: input.amountBase,
     baseCurrency: input.baseCurrency,
     exchangeRate: input.exchangeRate,
-    accountId: input.accountId,
+    // For transfers, accountId is the fromAccount; toAccountId is the destination.
+    accountId: isTransfer ? (input.fromAccountId ?? input.accountId) : input.accountId,
     categoryId: input.categoryId ?? null,
     relatedTransactionId: input.relatedTransactionId ?? null,
     description: input.description ?? null,
@@ -81,6 +89,11 @@ export const createTransactionWithBalanceUpdate = async (
     status: input.status ?? 'cleared',
     createdAt: now,
     updatedAt: now,
+    fromAccountId: input.fromAccountId ?? null,
+    toAccountId: input.toAccountId ?? null,
+    receivedAmount: input.receivedAmount ?? null,
+    country: input.country ?? null,
+    city: input.city ?? null,
   };
 
   db.withTransactionSync(() => {
@@ -89,18 +102,38 @@ export const createTransactionWithBalanceUpdate = async (
          id, type, date, amount, currency, amountBase, baseCurrency, exchangeRate,
          accountId, categoryId, relatedTransactionId, description, source, tags,
          notes, details, isRecurring, recurringRule, recurringParentId, status,
-         createdAt, updatedAt
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         createdAt, updatedAt,
+         fromAccountId, toAccountId, receivedAmount, country, city
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         row.id, row.type, row.date, row.amount, row.currency, row.amountBase,
         row.baseCurrency, row.exchangeRate, row.accountId, row.categoryId,
         row.relatedTransactionId, row.description, row.source, row.tags,
         row.notes, row.details, row.isRecurring, row.recurringRule,
         row.recurringParentId, row.status, row.createdAt, row.updatedAt,
+        row.fromAccountId, row.toAccountId, row.receivedAmount, row.country, row.city,
       ]
     );
 
-    if (input.accountId) {
+    if (isTransfer) {
+      // Debit from-account; credit to-account with receivedAmount (may differ for FX transfers)
+      const fromId = input.fromAccountId ?? input.accountId;
+      const toId = input.toAccountId;
+      const sentAmt = parseFloat(input.amount);
+      const receivedAmt = input.receivedAmount ? parseFloat(input.receivedAmount) : sentAmt;
+      if (fromId) {
+        db.runSync(
+          `UPDATE accounts SET balance = CAST(CAST(balance AS REAL) - ? AS TEXT) WHERE id = ?`,
+          [sentAmt, fromId]
+        );
+      }
+      if (toId) {
+        db.runSync(
+          `UPDATE accounts SET balance = CAST(CAST(balance AS REAL) + ? AS TEXT) WHERE id = ?`,
+          [receivedAmt, toId]
+        );
+      }
+    } else if (input.accountId) {
       const delta = getBalanceDelta(input.type, input.amountBase);
       db.runSync(
         `UPDATE accounts SET balance = CAST(CAST(balance AS REAL) + ? AS TEXT) WHERE id = ?`,

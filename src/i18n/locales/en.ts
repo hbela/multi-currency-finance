@@ -27,13 +27,14 @@ export type Translations = {
       counterparty: string; reference: string; fee: string;
       securityName: string; symbol: string; quantity: string; price: string;
       creditor: string; interestRate: string; remainingTerm: string;
+      fromAccount: string; toAccount: string; receivedAmount: string;
     };
-    sections: { details: string; currency: string };
+    sections: { details: string; currency: string; transfer: string };
     notFound: string;
   };
   form: { save: string; delete: string; addTransaction: string; saveChanges: string };
   nav: {
-    dashboard: string; transactions: string; budgets: string; reports: string; settings: string;
+    dashboard: string; transactions: string; accounts: string; investments: string; budgets: string; reports: string; settings: string;
     newTransaction: string; editTransaction: string; support: string;
   };
   dashboard: {
@@ -75,6 +76,41 @@ export type Translations = {
     frequency: string; weekly: string; monthly: string; yearly: string;
     startDate: string; endDate: string; hasEndDate: string; note: string;
     errorAmount: string; errorStartDate: string; errorEndDate: string; errorEndBeforeStart: string;
+  };
+  accounts: {
+    noAccounts: string;
+    form: {
+      titleAdd: string; titleEdit: string;
+      name: string; type: string; currency: string; institution: string; notes: string;
+      errorName: string; errorCurrency: string; confirmDelete: string;
+    };
+    nav: string;
+  };
+  exchangeRates: {
+    title: string; noRates: string; addRate: string;
+    from: string; to: string; rate: string; date: string; source: string;
+    form: { titleAdd: string; titleEdit: string; errorRate: string; confirmDelete: string };
+  };
+  investments: {
+    title: string;
+    noHoldings: string;
+    totalValue: string;
+    unrealizedPnL: string;
+    classes: { stock: string; etf: string; crypto: string; bond: string; other: string };
+    fields: {
+      asset: string; symbol: string; name: string; assetClass: string;
+      account: string; quantity: string; avgCost: string; currentPrice: string;
+      exchange: string; currency: string;
+    };
+    form: {
+      titleAdd: string; titleEdit: string;
+      titleAddAsset: string;
+      errorSymbol: string; errorName: string; errorQuantity: string; errorAvgCost: string;
+      errorAccount: string; errorAsset: string;
+      confirmDelete: string;
+    };
+    nav: string;
+    currentPriceHint: string;
   };
   common: { cancel: string; save: string; yes: string; no: string; delete: string; ok: string };
   support: {
@@ -147,10 +183,14 @@ const en: Translations = {
       creditor: 'Creditor / lender',
       interestRate: 'Interest rate (%)',
       remainingTerm: 'Remaining term (months)',
+      fromAccount: 'From account',
+      toAccount: 'To account',
+      receivedAmount: 'Received amount',
     },
     sections: {
       details: 'Details',
       currency: 'Currency & exchange rate',
+      transfer: 'Transfer details',
     },
     notFound: 'Transaction not found.',
   },
@@ -163,6 +203,8 @@ const en: Translations = {
   nav: {
     dashboard: 'Dashboard',
     transactions: 'Transactions',
+    accounts: 'Accounts',
+    investments: 'Investments',
     budgets: 'Budgets',
     reports: 'Reports',
     settings: 'Settings',
@@ -259,6 +301,71 @@ const en: Translations = {
     errorStartDate: 'Start date must be YYYY-MM-DD.',
     errorEndDate: 'End date must be YYYY-MM-DD.',
     errorEndBeforeStart: 'End date must be after start date.',
+  },
+  accounts: {
+    noAccounts: 'No accounts yet. Tap + to add one.',
+    form: {
+      titleAdd: 'Add account',
+      titleEdit: 'Edit account',
+      name: 'Account name',
+      type: 'Account type',
+      currency: 'Currency',
+      institution: 'Institution (optional)',
+      notes: 'Notes (optional)',
+      errorName: 'Name is required',
+      errorCurrency: 'Currency is required',
+      confirmDelete: 'Tap again to confirm',
+    },
+    nav: 'Accounts',
+  },
+  exchangeRates: {
+    title: 'Exchange rates',
+    noRates: 'No exchange rates saved.',
+    addRate: 'Add rate',
+    from: 'From currency',
+    to: 'To currency',
+    rate: 'Rate',
+    date: 'Date',
+    source: 'Source',
+    form: {
+      titleAdd: 'Add exchange rate',
+      titleEdit: 'Edit exchange rate',
+      errorRate: 'Rate must be positive',
+      confirmDelete: 'Tap again to confirm',
+    },
+  },
+  investments: {
+    title: 'Investments',
+    noHoldings: 'No holdings yet. Tap + to add one.',
+    totalValue: 'Total value',
+    unrealizedPnL: 'Unrealised P&L',
+    classes: { stock: 'Stocks', etf: 'ETFs', crypto: 'Crypto', bond: 'Bonds', other: 'Other' },
+    fields: {
+      asset: 'Asset',
+      symbol: 'Symbol / ticker',
+      name: 'Asset name',
+      assetClass: 'Asset class',
+      account: 'Account',
+      quantity: 'Quantity',
+      avgCost: 'Avg cost basis',
+      currentPrice: 'Current price',
+      exchange: 'Exchange (optional)',
+      currency: 'Currency',
+    },
+    form: {
+      titleAdd: 'Add holding',
+      titleEdit: 'Edit holding',
+      titleAddAsset: 'New asset',
+      errorSymbol: 'Symbol is required',
+      errorName: 'Name is required',
+      errorQuantity: 'Enter a valid quantity',
+      errorAvgCost: 'Enter a valid cost basis',
+      errorAccount: 'Account is required',
+      errorAsset: 'Asset is required',
+      confirmDelete: 'Tap again to confirm',
+    },
+    nav: 'Investments',
+    currentPriceHint: 'Leave blank to use avg cost',
   },
   common: {
     cancel: 'Cancel',

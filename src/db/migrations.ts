@@ -1,6 +1,6 @@
 import { db } from './db';
 
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 export const runMigrations = async (): Promise<void> => {
   await db.execAsync(`
@@ -305,6 +305,152 @@ export const runMigrations = async (): Promise<void> => {
 
     await db.execAsync(`PRAGMA legacy_alter_table = OFF;`);
     await db.execAsync(`PRAGMA foreign_keys = ON;`);
+  }
+
+  if (current < 7) {
+    // New tables: currencies, exchange_rates, assets, holdings, loans, loan_payments, ledger_entries.
+    // Column additions to accounts and transactions (all nullable — no data movement needed).
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS currencies (
+        code       TEXT PRIMARY KEY,
+        name       TEXT NOT NULL,
+        symbol     TEXT NOT NULL,
+        decimals   INTEGER NOT NULL DEFAULT 2,
+        isBase     INTEGER NOT NULL DEFAULT 0,
+        isActive   INTEGER NOT NULL DEFAULT 1,
+        created_at INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS exchange_rates (
+        id         TEXT PRIMARY KEY,
+        fromCode   TEXT NOT NULL,
+        toCode     TEXT NOT NULL,
+        rate       TEXT NOT NULL,
+        source     TEXT NOT NULL DEFAULT 'manual',
+        date       INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        UNIQUE(fromCode, toCode, date)
+      );
+      CREATE INDEX IF NOT EXISTS idx_fx_pair_date ON exchange_rates(fromCode, toCode, date DESC);
+
+      CREATE TABLE IF NOT EXISTS assets (
+        id         TEXT PRIMARY KEY,
+        symbol     TEXT NOT NULL,
+        name       TEXT NOT NULL,
+        assetClass TEXT NOT NULL,
+        currency   TEXT NOT NULL,
+        exchange   TEXT,
+        created_at INTEGER NOT NULL,
+        UNIQUE(symbol, currency)
+      );
+
+      CREATE TABLE IF NOT EXISTS holdings (
+        id           TEXT PRIMARY KEY,
+        assetId      TEXT NOT NULL,
+        accountId    TEXT NOT NULL,
+        quantity     TEXT NOT NULL DEFAULT '0',
+        avgCostBasis TEXT NOT NULL DEFAULT '0',
+        created_at   INTEGER NOT NULL,
+        updated_at   INTEGER NOT NULL,
+        FOREIGN KEY(assetId)   REFERENCES assets(id),
+        FOREIGN KEY(accountId) REFERENCES accounts(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS loans (
+        id              TEXT PRIMARY KEY,
+        accountId       TEXT NOT NULL,
+        name            TEXT NOT NULL,
+        principalAmount TEXT NOT NULL,
+        currency        TEXT NOT NULL,
+        interestRate    TEXT NOT NULL DEFAULT '0',
+        startDate       INTEGER NOT NULL,
+        termMonths      INTEGER NOT NULL,
+        loanType        TEXT NOT NULL DEFAULT 'personal',
+        lender          TEXT,
+        notes           TEXT,
+        isActive        INTEGER NOT NULL DEFAULT 1,
+        created_at      INTEGER NOT NULL,
+        updated_at      INTEGER NOT NULL,
+        FOREIGN KEY(accountId) REFERENCES accounts(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS loan_payments (
+        id               TEXT PRIMARY KEY,
+        loanId           TEXT NOT NULL,
+        transactionId    TEXT,
+        paymentDate      INTEGER NOT NULL,
+        principalPaid    TEXT NOT NULL,
+        interestPaid     TEXT NOT NULL,
+        totalPaid        TEXT NOT NULL,
+        remainingBalance TEXT NOT NULL,
+        created_at       INTEGER NOT NULL,
+        FOREIGN KEY(loanId)        REFERENCES loans(id) ON DELETE CASCADE,
+        FOREIGN KEY(transactionId) REFERENCES transactions(id) ON DELETE SET NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS ledger_entries (
+        id            TEXT PRIMARY KEY,
+        transactionId TEXT NOT NULL,
+        accountId     TEXT NOT NULL,
+        amount        TEXT NOT NULL,
+        currency      TEXT NOT NULL,
+        amountBase    TEXT NOT NULL,
+        baseCurrency  TEXT NOT NULL,
+        exchangeRate  TEXT NOT NULL DEFAULT '1',
+        entryType     TEXT NOT NULL,
+        created_at    INTEGER NOT NULL,
+        FOREIGN KEY(transactionId) REFERENCES transactions(id) ON DELETE CASCADE,
+        FOREIGN KEY(accountId)     REFERENCES accounts(id)     ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_ledger_txn  ON ledger_entries(transactionId);
+      CREATE INDEX IF NOT EXISTS idx_ledger_acct ON ledger_entries(accountId);
+      CREATE INDEX IF NOT EXISTS idx_ledger_date ON ledger_entries(created_at DESC);
+
+      ALTER TABLE accounts ADD COLUMN institution TEXT;
+
+      ALTER TABLE transactions ADD COLUMN fromAccountId  TEXT;
+      ALTER TABLE transactions ADD COLUMN toAccountId    TEXT;
+      ALTER TABLE transactions ADD COLUMN receivedAmount TEXT;
+      ALTER TABLE transactions ADD COLUMN country        TEXT;
+      ALTER TABLE transactions ADD COLUMN city           TEXT;
+    `);
+
+    // Seed currencies (20 common + crypto)
+    const now = Date.now();
+    await db.execAsync(`
+      INSERT OR IGNORE INTO currencies (code, name, symbol, decimals, isBase, isActive, created_at) VALUES
+        ('HUF', 'Hungarian Forint',  'Ft',  0, 1, 1, ${now}),
+        ('EUR', 'Euro',              '€',   2, 0, 1, ${now}),
+        ('USD', 'US Dollar',         '$',   2, 0, 1, ${now}),
+        ('GBP', 'Pound Sterling',    '£',   2, 0, 1, ${now}),
+        ('CHF', 'Swiss Franc',       'CHF', 2, 0, 1, ${now}),
+        ('JPY', 'Japanese Yen',      '¥',   0, 0, 1, ${now}),
+        ('AUD', 'Australian Dollar', 'A$',  2, 0, 1, ${now}),
+        ('CAD', 'Canadian Dollar',   'C$',  2, 0, 1, ${now}),
+        ('CZK', 'Czech Koruna',      'Kč',  2, 0, 1, ${now}),
+        ('PLN', 'Polish Zloty',      'zł',  2, 0, 1, ${now}),
+        ('RON', 'Romanian Leu',      'lei', 2, 0, 1, ${now}),
+        ('DKK', 'Danish Krone',      'kr',  2, 0, 1, ${now}),
+        ('NOK', 'Norwegian Krone',   'kr',  2, 0, 1, ${now}),
+        ('SEK', 'Swedish Krona',     'kr',  2, 0, 1, ${now}),
+        ('SGD', 'Singapore Dollar',  'S$',  2, 0, 1, ${now}),
+        ('AED', 'UAE Dirham',        'د.إ', 2, 0, 1, ${now}),
+        ('THB', 'Thai Baht',         '฿',   2, 0, 1, ${now}),
+        ('BTC', 'Bitcoin',           '₿',   8, 0, 1, ${now}),
+        ('ETH', 'Ethereum',          'Ξ',   8, 0, 1, ${now}),
+        ('USDT','Tether',            '₮',   2, 0, 1, ${now});
+    `);
+
+    // Seed initial manual exchange rates to HUF base
+    const rateId1 = 'fx-eur-huf-seed';
+    const rateId2 = 'fx-usd-huf-seed';
+    const rateId3 = 'fx-gbp-huf-seed';
+    await db.execAsync(`
+      INSERT OR IGNORE INTO exchange_rates (id, fromCode, toCode, rate, source, date, created_at) VALUES
+        ('${rateId1}', 'EUR', 'HUF', '390.0', 'manual', ${now}, ${now}),
+        ('${rateId2}', 'USD', 'HUF', '365.0', 'manual', ${now}, ${now}),
+        ('${rateId3}', 'GBP', 'HUF', '455.0', 'manual', ${now}, ${now});
+    `);
   }
 
   await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION};`);
