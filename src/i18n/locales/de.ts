@@ -99,6 +99,7 @@ const de: Translations = {
     biggestExpense: 'Größte Ausgabenkategorie',
     savingsRate: 'Sparquote',
     noAccountsYet: 'Noch keine Konten.',
+    ratesLastUpdated: 'Kurse aktualisiert {{date}}',
   },
   transactions: {
     noTransactions: 'Noch keine Transaktionen. Tippe auf + um eine hinzuzufügen.',
@@ -148,6 +149,16 @@ const de: Translations = {
     version: 'Standalone Budget Manager · v2.0 · offline',
     welcomeScreen: 'Willkommensbildschirm',
     welcomeScreenDesc: 'Willkommensbildschirm beim nächsten Start anzeigen',
+    baseCurrency: 'Basiswährung',
+    fxRates: 'Wechselkurse',
+  },
+  baseCurrency: {
+    title: 'Basiswährung',
+    current: 'Aktuell: {{code}}',
+    changeTo: 'Wechseln zu {{code}}',
+    confirm: '{{code}} als Basiswährung festlegen?',
+    warning: 'Historische Vermögenswerte werden nicht rückwirkend neu berechnet.',
+    changed: 'Basiswährung geändert zu {{code}}',
   },
   welcome: {
     title: 'Willkommen bei deinem Budget Manager',
@@ -317,6 +328,11 @@ const de: Translations = {
       errorRate: 'Der Kurs muss positiv sein',
       confirmDelete: 'Erneut tippen zum Bestätigen',
     },
+    history: 'Kursverlauf',
+    pairHistory: '{{from}} → {{to}} Verlauf',
+    lastUpdated: 'Aktualisiert {{date}}',
+    neverUpdated: 'Nie aktualisiert',
+    noHistory: 'Kein Verlauf für dieses Paar.',
   },
 };
 

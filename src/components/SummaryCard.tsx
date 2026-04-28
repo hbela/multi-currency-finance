@@ -10,9 +10,10 @@ interface Props {
   income: number;
   expense: number;
   currency?: string;
+  ratesUpdated?: number | null;
 }
 
-export const SummaryCard: React.FC<Props> = ({ balance, income, expense, currency = 'USD' }) => {
+export const SummaryCard: React.FC<Props> = ({ balance, income, expense, currency = 'USD', ratesUpdated }) => {
   const theme = useAppTheme();
   const { t } = useTranslation();
   const fmt = useMoneyFormatter(currency);
@@ -24,6 +25,11 @@ export const SummaryCard: React.FC<Props> = ({ balance, income, expense, currenc
             {t('dashboard.totalBalance')}
           </Text>
           <Text variant="headlineMedium">{fmt(balance)}</Text>
+          {ratesUpdated != null && (
+            <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 2 }}>
+              {t('dashboard.ratesLastUpdated', { date: new Date(ratesUpdated).toLocaleDateString() })}
+            </Text>
+          )}
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <View>

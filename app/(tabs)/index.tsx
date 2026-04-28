@@ -11,6 +11,7 @@ import { useAccountStore } from '@/src/store/accountStore';
 import { useCurrencyStore } from '@/src/store/currencyStore';
 import { useCategoryStore } from '@/src/store/categoryStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
+import { useExchangeRateStore } from '@/src/store/exchangeRateStore';
 import {
   getMonthlySummary,
   getCategoryBreakdown,
@@ -31,6 +32,7 @@ export default function DashboardScreen() {
   const accounts = useAccountStore((s) => s.items);
   const categories = useCategoryStore((s) => s.items);
   const baseCurrency = useCurrencyStore((s) => s.base);
+  const rateItems = useExchangeRateStore((s) => s.items);
 
   const [netWorth, setNetWorth] = useState(0);
   const [income, setIncome] = useState(0);
@@ -91,6 +93,10 @@ export default function DashboardScreen() {
 
   const recent = useMemo(() => transactions.slice(0, 10), [transactions]);
   const savingsRate = income > 0 ? Math.round(((income - expense) / income) * 100) : 0;
+  const latestRateDate = useMemo(
+    () => rateItems.length > 0 ? Math.max(...rateItems.map((r) => r.date)) : null,
+    [rateItems]
+  );
   const sparkFirst = sparkData.length > 0 ? sparkData[0].amountBase : 0;
   const sparkLast = sparkData.length > 0 ? sparkData[sparkData.length - 1].amountBase : 0;
 
@@ -99,7 +105,7 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 96 }}>
 
         {/* ── Net worth card ──────────────────────────────────── */}
-        <SummaryCard balance={netWorth} income={income} expense={expense} currency={displayCurrency} />
+        <SummaryCard balance={netWorth} income={income} expense={expense} currency={displayCurrency} ratesUpdated={latestRateDate} />
 
         {/* ── Sparkline ───────────────────────────────────────── */}
         {sparkData.length >= 2 && (

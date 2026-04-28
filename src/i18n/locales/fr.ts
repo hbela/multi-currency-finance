@@ -99,6 +99,7 @@ const fr: Translations = {
     biggestExpense: 'Catégorie de dépense principale',
     savingsRate: 'Taux d\'épargne',
     noAccountsYet: 'Aucun compte pour l\'instant.',
+    ratesLastUpdated: 'Taux mis à jour {{date}}',
   },
   transactions: {
     noTransactions: 'Aucune transaction. Appuyez sur + pour en ajouter une.',
@@ -148,6 +149,16 @@ const fr: Translations = {
     version: 'Standalone Budget Manager · v2.0 · hors ligne',
     welcomeScreen: "Écran d'accueil",
     welcomeScreenDesc: "Afficher l'écran d'accueil au prochain démarrage",
+    baseCurrency: 'Devise de base',
+    fxRates: 'Taux de change',
+  },
+  baseCurrency: {
+    title: 'Devise de base',
+    current: 'Actuelle : {{code}}',
+    changeTo: 'Passer à {{code}}',
+    confirm: 'Définir {{code}} comme devise de base ?',
+    warning: 'Les valeurs historiques de patrimoine net ne seront pas recalculées rétroactivement.',
+    changed: 'Devise de base changée en {{code}}',
   },
   welcome: {
     title: 'Bienvenue dans votre Budget Manager',
@@ -317,6 +328,11 @@ const fr: Translations = {
       errorRate: 'Le taux doit être positif',
       confirmDelete: 'Appuyez à nouveau pour confirmer',
     },
+    history: 'Historique des taux',
+    pairHistory: 'Historique {{from}} → {{to}}',
+    lastUpdated: 'Mis à jour {{date}}',
+    neverUpdated: 'Jamais mis à jour',
+    noHistory: 'Aucun historique pour cette paire.',
   },
 };
 

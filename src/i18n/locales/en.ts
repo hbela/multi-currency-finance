@@ -60,6 +60,8 @@ export type Translations = {
     biggestExpense: string;
     savingsRate: string;
     noAccountsYet: string;
+    // Week 6
+    ratesLastUpdated: string;
   };
   transactions: { noTransactions: string };
   budgets: { noBudgets: string; newBudget: string; monthlyLimit: string; left: string; overBy: string };
@@ -76,6 +78,15 @@ export type Translations = {
     uploadToDrive: string; clear: string;
     language: string; languageLabel: string; version: string;
     welcomeScreen: string; welcomeScreenDesc: string;
+    baseCurrency: string; fxRates: string;
+  };
+  baseCurrency: {
+    title: string;
+    current: string;
+    changeTo: string;
+    confirm: string;
+    warning: string;
+    changed: string;
   };
   welcome: {
     title: string; subtitle: string;
@@ -105,6 +116,8 @@ export type Translations = {
     title: string; noRates: string; addRate: string;
     from: string; to: string; rate: string; date: string; source: string;
     form: { titleAdd: string; titleEdit: string; errorRate: string; confirmDelete: string };
+    history: string; pairHistory: string; lastUpdated: string; neverUpdated: string;
+    noHistory: string;
   };
   investments: {
     title: string;
@@ -275,6 +288,7 @@ const en: Translations = {
     biggestExpense: 'Top expense category',
     savingsRate: 'Savings rate',
     noAccountsYet: 'No accounts yet.',
+    ratesLastUpdated: 'Rates updated {{date}}',
   },
   transactions: {
     noTransactions: 'No transactions yet. Tap + to add one.',
@@ -324,6 +338,16 @@ const en: Translations = {
     version: 'Standalone Budget Manager · v2.0 · offline',
     welcomeScreen: 'Welcome screen',
     welcomeScreenDesc: 'Show welcome screen on next launch',
+    baseCurrency: 'Base currency',
+    fxRates: 'Exchange rates',
+  },
+  baseCurrency: {
+    title: 'Base currency',
+    current: 'Current base: {{code}}',
+    changeTo: 'Switch to {{code}}',
+    confirm: 'Set {{code}} as base currency?',
+    warning: 'Historical net worth values will not be recalculated retroactively.',
+    changed: 'Base currency changed to {{code}}',
   },
   welcome: {
     title: 'Welcome to your Budget Manager',
@@ -388,6 +412,11 @@ const en: Translations = {
       errorRate: 'Rate must be positive',
       confirmDelete: 'Tap again to confirm',
     },
+    history: 'Rate history',
+    pairHistory: '{{from}} → {{to}} history',
+    lastUpdated: 'Updated {{date}}',
+    neverUpdated: 'Never updated',
+    noHistory: 'No history for this pair.',
   },
   investments: {
     title: 'Investments',

@@ -99,6 +99,7 @@ const hu: Translations = {
     biggestExpense: 'Legnagyobb kiadási kategória',
     savingsRate: 'Megtakarítási ráta',
     noAccountsYet: 'Még nincs számla.',
+    ratesLastUpdated: 'Árfolyam frissítve: {{date}}',
   },
   transactions: {
     noTransactions: 'Még nincs tranzakció. Nyomj + gombot egynek hozzáadásához.',
@@ -148,6 +149,16 @@ const hu: Translations = {
     version: 'Standalone Budget Manager · v2.0 · offline',
     welcomeScreen: 'Üdvözlő képernyő',
     welcomeScreenDesc: 'Üdvözlő képernyő megjelenítése következő indításkor',
+    baseCurrency: 'Alap pénznem',
+    fxRates: 'Árfolyamok',
+  },
+  baseCurrency: {
+    title: 'Alap pénznem',
+    current: 'Jelenlegi alap: {{code}}',
+    changeTo: 'Váltás: {{code}}',
+    confirm: '{{code}} beállítása alap pénznemként?',
+    warning: 'A korábbi nettó vagyon értékek nem kerülnek visszamenőleg újraszámításra.',
+    changed: 'Alap pénznem módosítva: {{code}}',
   },
   welcome: {
     title: 'Üdvözöljük a Budget Managerben',
@@ -317,6 +328,11 @@ const hu: Translations = {
       errorRate: 'Az árfolyamnak pozitívnak kell lennie',
       confirmDelete: 'Koppints újra a megerősítéshez',
     },
+    history: 'Előzmények',
+    pairHistory: '{{from}} → {{to}} előzmények',
+    lastUpdated: 'Frissítve: {{date}}',
+    neverUpdated: 'Soha nem frissítve',
+    noHistory: 'Nincs előzmény ehhez a párhoz.',
   },
 };
 

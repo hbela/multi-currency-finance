@@ -157,21 +157,28 @@ Goal: make the dashboard and reports reflect the full multi-currency, multi-acco
 
 ---
 
-## Week 6 — Base currency settings & FX rate management
+## Week 6 — Base currency settings & FX rate management ✅
 
 Goal: let the user configure base currency and manage FX rates properly.
 
 ### Base currency screen
-- Settings → Base currency: show current base, allow switching; recalculates net worth immediately
-- Warn that historical `amountBase` values stored on old transactions will not be retroactively recalculated
+- [app/settings/base-currency.tsx](../app/settings/base-currency.tsx) — list all active currencies with radio selection; confirmation dialog warns that historical net worth values are not retroactively recalculated; snackbar confirms change
+- Settings → Base currency row shows current `code · symbol · name`
 
 ### FX rate management
-- Move Exchange Rates out of Settings into a dedicated modal/screen
-- Add date picker to rate entry (default today)
-- Show rate history per pair (list of dated entries)
-- Show "last updated" timestamp on Dashboard net worth
+- [app/fx-rates.tsx](../app/fx-rates.tsx) — dedicated modal screen; pair chip filter row; pair summary view (latest rate + history count per pair); drill-down to dated history list per pair; add-rate dialog with date field (YYYY-MM-DD, defaults to today)
+- Exchange Rates section in Settings replaced by two navigation rows: **Base currency** + **Exchange rates**
 
-### Auto FX (Phase 2 scope)
+### Dashboard
+- `SummaryCard` gains optional `ratesUpdated` prop; shows `"Rates updated <date>"` subtitle under total balance when any rate exists; date is `MAX(date)` across all exchange_rates rows
+
+### i18n
+- New keys in all 4 locales: `settings.baseCurrency`, `settings.fxRates`
+- New namespace `baseCurrency.*`: `title`, `current`, `changeTo`, `confirm`, `warning`, `changed`
+- New `exchangeRates.*` keys: `history`, `pairHistory`, `lastUpdated`, `neverUpdated`, `noHistory`
+- New `dashboard.ratesLastUpdated`
+
+### Auto FX (Phase 2 scope — not implemented)
 - Pluggable API source field (`source: 'manual' | 'api'`) already on the schema
 - Wire a free FX API (e.g. Open Exchange Rates free tier) behind a settings toggle
 - Store fetched rates with `source: 'api'`; manual rates always override for the same date

@@ -123,6 +123,14 @@ export default function RootLayout() {
                   name="transaction/[id]"
                   options={{ presentation: 'modal', title: t('nav.editTransaction') }}
                 />
+                <Stack.Screen
+                  name="fx-rates"
+                  options={{ presentation: 'modal', title: t('settings.fxRates') }}
+                />
+                <Stack.Screen
+                  name="settings/base-currency"
+                  options={{ presentation: 'modal', title: t('settings.baseCurrency') }}
+                />
               </Stack>
               <StatusBar style="auto" />
               <ScreenshotStatusSnackbar />

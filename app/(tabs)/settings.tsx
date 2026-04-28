@@ -19,7 +19,6 @@ import { useTranslation } from 'react-i18next';
 import { useScreenshot, DEVICE_DIMENSIONS, DeviceType } from '@/src/context/ScreenshotContext';
 import { useAccountStore } from '@/src/store/accountStore';
 import { useCategoryStore } from '@/src/store/categoryStore';
-import { useExchangeRateStore } from '@/src/store/exchangeRateStore';
 import { useCurrencyStore } from '@/src/store/currencyStore';
 import { useThemeStore, ThemeMode } from '@/src/store/themeStore';
 import { getSetting, setSetting } from '@/src/db/settings';
@@ -78,37 +77,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const rates = useExchangeRateStore((s) => s.items);
-  const upsertFxRate = useExchangeRateStore((s) => s.upsertRate);
-  const deleteFxRate = useExchangeRateStore((s) => s.deleteRate);
-  const currencies = useCurrencyStore((s) => s.items);
-
-  const [fxOpen, setFxOpen] = useState(false);
-  const [fxFrom, setFxFrom] = useState('EUR');
-  const [fxTo, setFxTo] = useState('HUF');
-  const [fxRate, setFxRate] = useState('');
-  const [fxSubmitting, setFxSubmitting] = useState(false);
-
-  const submitFxRate = async () => {
-    const r = parseFloat(fxRate);
-    if (!fxFrom.trim() || !fxTo.trim() || !Number.isFinite(r) || r <= 0) return;
-    setFxSubmitting(true);
-    try {
-      await upsertFxRate({
-        fromCode: fxFrom.trim().toUpperCase(),
-        toCode: fxTo.trim().toUpperCase(),
-        rate: String(r),
-        source: 'manual',
-        date: Date.now(),
-      });
-      setFxOpen(false);
-      setFxFrom('EUR');
-      setFxTo('HUF');
-      setFxRate('');
-    } finally {
-      setFxSubmitting(false);
-    }
-  };
+  const base = useCurrencyStore((s) => s.base);
 
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountName, setAccountName] = useState('');
@@ -256,31 +225,24 @@ export default function SettingsScreen() {
 
       <Divider />
 
-      {/* Exchange Rates */}
+      {/* Currency */}
       <List.Section>
         <List.Subheader>{t('exchangeRates.title')}</List.Subheader>
-        {rates.length === 0 && (
-          <List.Item
-            title={t('exchangeRates.noRates')}
-            left={(p) => <List.Icon {...p} icon="information-outline" />}
-          />
-        )}
-        {rates.map((r) => (
-          <List.Item
-            key={r.id}
-            title={`${r.fromCode} → ${r.toCode}`}
-            description={`${r.rate}  ·  ${new Date(r.date).toLocaleDateString()}`}
-            left={(p) => <List.Icon {...p} icon="currency-usd" />}
-            right={() => (
-              <IconButton icon="delete" onPress={() => deleteFxRate(r.id)} />
-            )}
-          />
-        ))}
-        <View style={{ paddingHorizontal: 16 }}>
-          <Button icon="plus" onPress={() => setFxOpen(true)}>
-            {t('exchangeRates.addRate')}
-          </Button>
-        </View>
+        <List.Item
+          title={t('settings.baseCurrency')}
+          description={base ? `${base.code}  ${base.symbol}  ${base.name}` : '—'}
+          left={(p) => <List.Icon {...p} icon="earth" />}
+          right={(p) => <List.Icon {...p} icon="chevron-right" />}
+          onPress={() => router.push('/settings/base-currency')}
+        />
+        <Divider />
+        <List.Item
+          title={t('settings.fxRates')}
+          description={t('exchangeRates.title')}
+          left={(p) => <List.Icon {...p} icon="swap-horizontal" />}
+          right={(p) => <List.Icon {...p} icon="chevron-right" />}
+          onPress={() => router.push('/fx-rates')}
+        />
       </List.Section>
 
       <Divider />
@@ -334,50 +296,6 @@ export default function SettingsScreen() {
       </View>
 
 <Portal>
-        <Dialog visible={fxOpen} onDismiss={() => setFxOpen(false)}>
-          <Dialog.Title>{t('exchangeRates.form.titleAdd')}</Dialog.Title>
-          <Dialog.Content style={{ gap: 12 }}>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <TextInput
-                mode="outlined"
-                label={t('exchangeRates.from')}
-                value={fxFrom}
-                onChangeText={(v) => setFxFrom(v.toUpperCase())}
-                autoCapitalize="characters"
-                maxLength={6}
-                style={{ flex: 1 }}
-              />
-              <TextInput
-                mode="outlined"
-                label={t('exchangeRates.to')}
-                value={fxTo}
-                onChangeText={(v) => setFxTo(v.toUpperCase())}
-                autoCapitalize="characters"
-                maxLength={6}
-                style={{ flex: 1 }}
-              />
-            </View>
-            <TextInput
-              mode="outlined"
-              label={t('exchangeRates.rate')}
-              value={fxRate}
-              onChangeText={setFxRate}
-              keyboardType="decimal-pad"
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setFxOpen(false)} disabled={fxSubmitting}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onPress={submitFxRate}
-              loading={fxSubmitting}
-              disabled={fxSubmitting || !fxFrom || !fxTo || !fxRate}>
-              {t('common.save')}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-
         <Dialog visible={accountOpen} onDismiss={() => setAccountOpen(false)}>
           <Dialog.Title>{t('settings.newAccount')}</Dialog.Title>
           <Dialog.Content style={{ gap: 12 }}>
