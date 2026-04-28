@@ -12,6 +12,14 @@ export type Translations = {
     income: string;
     noTransactions: string;
     noCategories: string;
+    // Week 5
+    currencyFilter: string;
+    allCurrencies: string;
+    accountPnL: string;
+    noAccountPnL: string;
+    countryBreakdown: string;
+    noCountryData: string;
+    exportCsv: string;
   };
   txn: {
     types: {
@@ -45,6 +53,13 @@ export type Translations = {
     expenseThisMonth: string;
     today: string;
     yesterday: string;
+    // Week 5
+    netWorthTrend: string;
+    last30Days: string;
+    accountSummary: string;
+    biggestExpense: string;
+    savingsRate: string;
+    noAccountsYet: string;
   };
   transactions: { noTransactions: string };
   budgets: { noBudgets: string; newBudget: string; monthlyLimit: string; left: string; overBy: string };
@@ -112,6 +127,33 @@ export type Translations = {
     nav: string;
     currentPriceHint: string;
   };
+  loans: {
+    title: string;
+    noLoans: string;
+    totalDebt: string;
+    monthlyPayment: string;
+    types: { mortgage: string; personal: string; auto: string; student: string };
+    fields: {
+      name: string; account: string; principal: string; currency: string;
+      interestRate: string; startDate: string; termMonths: string;
+      loanType: string; lender: string; notes: string;
+      remainingBalance: string; nextPayment: string;
+    };
+    form: {
+      titleAdd: string; titleEdit: string;
+      errorName: string; errorAccount: string; errorPrincipal: string;
+      errorRate: string; errorTerm: string;
+      confirmClose: string; confirmDelete: string;
+    };
+    payment: {
+      title: string; totalPaid: string; principalPaid: string; interestPaid: string;
+      remaining: string; date: string;
+      errorAmount: string;
+      history: string; noPayments: string;
+    };
+    nav: string;
+    closed: string;
+  };
   common: { cancel: string; save: string; yes: string; no: string; delete: string; ok: string };
   support: {
     title: string;
@@ -148,6 +190,13 @@ const en: Translations = {
     income: 'Income',
     noTransactions: 'No {{type}} transactions this month.',
     noCategories: 'No categories to display.',
+    currencyFilter: 'Currency',
+    allCurrencies: 'All currencies',
+    accountPnL: 'Per-account P&L',
+    noAccountPnL: 'No account data for this month.',
+    countryBreakdown: 'Spending by country',
+    noCountryData: 'No location data for this month.',
+    exportCsv: 'Export CSV',
   },
   txn: {
     types: {
@@ -220,6 +269,12 @@ const en: Translations = {
     expenseThisMonth: 'Expense (this month)',
     today: 'Today',
     yesterday: 'Yesterday',
+    netWorthTrend: 'Net worth trend',
+    last30Days: 'Last 30 days',
+    accountSummary: 'Accounts by currency',
+    biggestExpense: 'Top expense category',
+    savingsRate: 'Savings rate',
+    noAccountsYet: 'No accounts yet.',
   },
   transactions: {
     noTransactions: 'No transactions yet. Tap + to add one.',
@@ -366,6 +421,51 @@ const en: Translations = {
     },
     nav: 'Investments',
     currentPriceHint: 'Leave blank to use avg cost',
+  },
+  loans: {
+    title: 'Loans',
+    noLoans: 'No active loans. Tap + to add one.',
+    totalDebt: 'Total debt',
+    monthlyPayment: 'Monthly payment',
+    types: { mortgage: 'Mortgage', personal: 'Personal', auto: 'Auto', student: 'Student' },
+    fields: {
+      name: 'Loan name',
+      account: 'Linked account',
+      principal: 'Principal amount',
+      currency: 'Currency',
+      interestRate: 'Interest rate (% p.a.)',
+      startDate: 'Start date (YYYY-MM-DD)',
+      termMonths: 'Term (months)',
+      loanType: 'Loan type',
+      lender: 'Lender (optional)',
+      notes: 'Notes (optional)',
+      remainingBalance: 'Remaining balance',
+      nextPayment: 'Next payment',
+    },
+    form: {
+      titleAdd: 'Add loan',
+      titleEdit: 'Edit loan',
+      errorName: 'Name is required',
+      errorAccount: 'Account is required',
+      errorPrincipal: 'Enter a valid principal amount',
+      errorRate: 'Enter a valid interest rate',
+      errorTerm: 'Enter a valid term in months',
+      confirmClose: 'Mark as closed?',
+      confirmDelete: 'Tap again to confirm',
+    },
+    payment: {
+      title: 'Record payment',
+      totalPaid: 'Total paid',
+      principalPaid: 'Principal',
+      interestPaid: 'Interest',
+      remaining: 'Remaining balance',
+      date: 'Payment date (YYYY-MM-DD)',
+      errorAmount: 'Enter a valid payment amount',
+      history: 'Payment history',
+      noPayments: 'No payments recorded yet.',
+    },
+    nav: 'Loans',
+    closed: 'Close loan',
   },
   common: {
     cancel: 'Cancel',

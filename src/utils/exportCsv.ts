@@ -24,6 +24,8 @@ const buildTransactionsCsv = async (): Promise<string> => {
     'accountId', 'categoryId', 'description', 'source',
     'tags', 'notes', 'status', 'isRecurring',
     'recurringParentId', 'createdAt', 'updatedAt',
+    // v7 fields
+    'fromAccountId', 'toAccountId', 'receivedAmount', 'country', 'city',
   ]);
   const lines = rows.map((r) =>
     toCsvRow([
@@ -35,6 +37,7 @@ const buildTransactionsCsv = async (): Promise<string> => {
       r.recurringParentId,
       new Date(r.createdAt).toISOString(),
       new Date(r.updatedAt).toISOString(),
+      r.fromAccountId, r.toAccountId, r.receivedAmount, r.country, r.city,
     ])
   );
   return [header, ...lines].join('\n');

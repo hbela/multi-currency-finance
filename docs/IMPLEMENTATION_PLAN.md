@@ -130,20 +130,30 @@ Goal: track active loans, amortisation schedule, payment history.
 
 ---
 
-## Week 5 — Enhanced Dashboard & Reports
+## Week 5 — Enhanced Dashboard & Reports ✅
 
 Goal: make the dashboard and reports reflect the full multi-currency, multi-account picture.
 
 ### Dashboard upgrades
-- Account balance summary cards (one per currency group, tappable → Accounts tab filtered)
-- Net worth trend sparkline (last 30 days, derived from daily ledger snapshots or recomputed on demand)
-- Quick stats: monthly savings rate, biggest expense category
+- Account balance summary cards grouped by currency, tappable → Accounts tab; balance converted to base via rate map
+- Net worth trend sparkline (last 30 days recomputed from transactions table) with % trend badge
+- Quick stats: monthly savings rate, biggest expense category (name + amount)
+- [src/components/NetWorthSparkline.tsx](../src/components/NetWorthSparkline.tsx) — pure bar-based sparkline + `TrendBadge`
 
 ### Reports upgrades
-- Add currency filter to monthly breakdown
-- Per-account P&L report
-- Country/city spending breakdown (using `country`/`city` on transactions)
-- Export: extend CSV export to include all v7 fields
+- Currency filter chip row (per-account currency) — filters per-account P&L section
+- Per-account P&L card: income / expense / net per account for the selected month
+- Country/city spending breakdown card for the selected month
+- Export CSV button moved into Reports; CSV extended with v7 fields (`fromAccountId`, `toAccountId`, `receivedAmount`, `country`, `city`)
+
+### New DB queries added to [src/db/transactions.ts](../src/db/transactions.ts)
+- `getNetWorthHistory(days)` — returns 30 daily running net-worth points
+- `getAccountPnL(month)` — per-account income / expense / net
+- `getCountrySpending(month)` — country + city expense breakdown
+
+### i18n
+- New keys in all 4 locales: `dashboard.netWorthTrend/last30Days/accountSummary/biggestExpense/savingsRate/noAccountsYet`
+- New keys: `reports.currencyFilter/allCurrencies/accountPnL/noAccountPnL/countryBreakdown/noCountryData/exportCsv`
 
 ---
 

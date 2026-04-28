@@ -66,6 +66,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="loans"
+        options={{
+          title: t('loans.nav'),
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="handshake" color={color} size={size} />
+          ),
+          headerRight: () => <ScreenshotCaptureButton screenName="loans" />,
+        }}
+      />
+      <Tabs.Screen
         name="budgets"
         options={{
           title: t('nav.budgets'),

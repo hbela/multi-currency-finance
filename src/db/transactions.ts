@@ -359,3 +359,100 @@ export const getMonthlyTotals = async (month: string) => {
   const [year, m] = month.split('-').map(Number);
   return getMonthlySummary(year, m);
 };
+
+// ─── Week 5 queries ───────────────────────────────────────────────────────────
+
+export interface DailyNetWorthPoint {
+  date: string; // 'YYYY-MM-DD'
+  amountBase: number;
+}
+
+/**
+ * Returns one data point per calendar day for the last `days` days (default 30).
+ * Each point is the cumulative sum of amountBase for all non-transfer transactions
+ * up to and including that day — a running net-worth proxy.
+ * Recomputed on-demand from the transactions table.
+ */
+export const getNetWorthHistory = async (days = 30): Promise<DailyNetWorthPoint[]> => {
+  const points: DailyNetWorthPoint[] = [];
+  const now = new Date();
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    d.setHours(23, 59, 59, 999);
+    const endOfDay = d.getTime();
+
+    const row = await db.getFirstAsync<{ total: number | null }>(
+      `SELECT COALESCE(SUM(
+         CASE
+           WHEN type IN ('INCOME','LOAN_RECEIVED','INVESTMENT_SELL') THEN CAST(amountBase AS REAL)
+           WHEN type IN ('EXPENSE','LOAN_REPAYMENT','INVESTMENT_BUY') THEN -CAST(amountBase AS REAL)
+           ELSE 0
+         END
+       ), 0) AS total
+       FROM transactions
+       WHERE date <= ? AND type != 'TRANSFER'`,
+      [endOfDay]
+    );
+
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    points.push({ date: dateStr, amountBase: row?.total ?? 0 });
+  }
+
+  return points;
+};
+
+export interface AccountPnLRow {
+  accountId: string;
+  income: number;
+  expense: number;
+  net: number;
+}
+
+/** Per-account income / expense / net for a given month. */
+export const getAccountPnL = async (month: string): Promise<AccountPnLRow[]> => {
+  const { start, end } = monthRange(month);
+  return db.getAllAsync<AccountPnLRow>(
+    `SELECT
+       accountId,
+       COALESCE(SUM(CASE WHEN type IN ('INCOME','LOAN_RECEIVED','INVESTMENT_SELL') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS income,
+       COALESCE(SUM(CASE WHEN type IN ('EXPENSE','LOAN_REPAYMENT','INVESTMENT_BUY') THEN CAST(amountBase AS REAL) ELSE 0 END), 0) AS expense,
+       COALESCE(SUM(
+         CASE
+           WHEN type IN ('INCOME','LOAN_RECEIVED','INVESTMENT_SELL') THEN CAST(amountBase AS REAL)
+           WHEN type IN ('EXPENSE','LOAN_REPAYMENT','INVESTMENT_BUY') THEN -CAST(amountBase AS REAL)
+           ELSE 0
+         END
+       ), 0) AS net
+     FROM transactions
+     WHERE date >= ? AND date < ? AND accountId IS NOT NULL
+     GROUP BY accountId
+     ORDER BY ABS(net) DESC`,
+    [start, end]
+  );
+};
+
+export interface CountrySpendRow {
+  country: string;
+  city: string | null;
+  total: number;
+}
+
+/** Country + city spending breakdown for a given month (EXPENSE-type transactions only). */
+export const getCountrySpending = async (month: string): Promise<CountrySpendRow[]> => {
+  const { start, end } = monthRange(month);
+  return db.getAllAsync<CountrySpendRow>(
+    `SELECT
+       COALESCE(country, 'Unknown') AS country,
+       city,
+       SUM(CAST(amountBase AS REAL)) AS total
+     FROM transactions
+     WHERE date >= ? AND date < ?
+       AND type IN ('EXPENSE','LOAN_REPAYMENT','INVESTMENT_BUY')
+       AND (country IS NOT NULL OR city IS NOT NULL)
+     GROUP BY country, city
+     ORDER BY total DESC`,
+    [start, end]
+  );
+};

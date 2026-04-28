@@ -28,6 +28,7 @@ import { useAssetStore } from '@/src/store/assetStore';
 import { useCurrencyStore } from '@/src/store/currencyStore';
 import { useExchangeRateStore } from '@/src/store/exchangeRateStore';
 import { useHoldingStore } from '@/src/store/holdingStore';
+import { useLoanStore } from '@/src/store/loanStore';
 import { useThemeStore } from '@/src/store/themeStore';
 import { useTransactionStore } from '@/src/store/transactionStore';
 import { darkTheme, lightTheme } from '@/src/theme';
@@ -81,6 +82,7 @@ export default function RootLayout() {
           useExchangeRateStore.getState().load(),
           useAssetStore.getState().load(),
           useHoldingStore.getState().load(),
+          useLoanStore.getState().load(),
         ]);
         const welcomeSetting = await getSetting('show_welcome');
         setShowWelcome(welcomeSetting !== 'false');
