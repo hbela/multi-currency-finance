@@ -167,6 +167,19 @@ export type Translations = {
     nav: string;
     closed: string;
   };
+  autoFx: {
+    section: string;
+    toggle: string;
+    toggleDesc: string;
+    apiKey: string;
+    apiKeyHint: string;
+    syncNow: string;
+    syncing: string;
+    lastSync: string;
+    neverSynced: string;
+    syncSuccess: string;
+    syncError: string;
+  };
   common: { cancel: string; save: string; yes: string; no: string; delete: string; ok: string };
   support: {
     title: string;
@@ -495,6 +508,19 @@ const en: Translations = {
     },
     nav: 'Loans',
     closed: 'Close loan',
+  },
+  autoFx: {
+    section: 'Auto exchange rates',
+    toggle: 'Auto-fetch rates',
+    toggleDesc: 'Fetch live rates from Open Exchange Rates',
+    apiKey: 'App ID (API key)',
+    apiKeyHint: 'Free key from openexchangerates.org',
+    syncNow: 'Sync now',
+    syncing: 'Syncing…',
+    lastSync: 'Last sync: {{date}}',
+    neverSynced: 'Never synced',
+    syncSuccess: 'Synced {{count}} rates',
+    syncError: 'Sync failed: {{error}}',
   },
   common: {
     cancel: 'Cancel',

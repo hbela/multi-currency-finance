@@ -334,6 +334,19 @@ const fr: Translations = {
     neverUpdated: 'Jamais mis à jour',
     noHistory: 'Aucun historique pour cette paire.',
   },
+  autoFx: {
+    section: 'Taux de change automatiques',
+    toggle: 'Récupération automatique',
+    toggleDesc: 'Taux en direct depuis Open Exchange Rates',
+    apiKey: 'App ID (clé API)',
+    apiKeyHint: 'Clé gratuite sur openexchangerates.org',
+    syncNow: 'Synchroniser maintenant',
+    syncing: 'Synchronisation…',
+    lastSync: 'Dernière sync : {{date}}',
+    neverSynced: 'Jamais synchronisé',
+    syncSuccess: '{{count}} taux synchronisés',
+    syncError: 'Échec : {{error}}',
+  },
 };
 
 export default fr;

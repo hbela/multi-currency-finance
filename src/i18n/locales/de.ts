@@ -334,6 +334,19 @@ const de: Translations = {
     neverUpdated: 'Nie aktualisiert',
     noHistory: 'Kein Verlauf für dieses Paar.',
   },
+  autoFx: {
+    section: 'Automatische Wechselkurse',
+    toggle: 'Kurse automatisch abrufen',
+    toggleDesc: 'Live-Kurse von Open Exchange Rates',
+    apiKey: 'App ID (API-Schlüssel)',
+    apiKeyHint: 'Kostenloser Schlüssel: openexchangerates.org',
+    syncNow: 'Jetzt synchronisieren',
+    syncing: 'Synchronisiere…',
+    lastSync: 'Letzte Sync: {{date}}',
+    neverSynced: 'Nie synchronisiert',
+    syncSuccess: '{{count}} Kurse synchronisiert',
+    syncError: 'Fehler: {{error}}',
+  },
 };
 
 export default de;

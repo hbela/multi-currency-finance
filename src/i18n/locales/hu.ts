@@ -334,6 +334,19 @@ const hu: Translations = {
     neverUpdated: 'Soha nem frissítve',
     noHistory: 'Nincs előzmény ehhez a párhoz.',
   },
+  autoFx: {
+    section: 'Automatikus árfolyamok',
+    toggle: 'Automatikus letöltés',
+    toggleDesc: 'Élő árfolyamok az Open Exchange Rates-ről',
+    apiKey: 'App ID (API kulcs)',
+    apiKeyHint: 'Ingyenes kulcs: openexchangerates.org',
+    syncNow: 'Szinkronizálás',
+    syncing: 'Szinkronizálás…',
+    lastSync: 'Utolsó szinkron: {{date}}',
+    neverSynced: 'Még nem szinkronizált',
+    syncSuccess: '{{count}} árfolyam szinkronizálva',
+    syncError: 'Hiba: {{error}}',
+  },
 };
 
 export default hu;

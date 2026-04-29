@@ -83,7 +83,7 @@ Goal: screens and form changes that expose the Week 1 data layer to users.
 
 ---
 
-## Week 3 — Investments tab
+## Week 3 — Investments tab ✅
 
 Goal: track asset holdings and show unrealised P&L.
 
@@ -108,7 +108,7 @@ Goal: track asset holdings and show unrealised P&L.
 
 ---
 
-## Week 4 — Loans tab
+## Week 4 — Loans tab ✅
 
 Goal: track active loans, amortisation schedule, payment history.
 
@@ -178,24 +178,13 @@ Goal: let the user configure base currency and manage FX rates properly.
 - New `exchangeRates.*` keys: `history`, `pairHistory`, `lastUpdated`, `neverUpdated`, `noHistory`
 - New `dashboard.ratesLastUpdated`
 
-### Auto FX (Phase 2 scope — not implemented)
-- Pluggable API source field (`source: 'manual' | 'api'`) already on the schema
-- Wire a free FX API (e.g. Open Exchange Rates free tier) behind a settings toggle
-- Store fetched rates with `source: 'api'`; manual rates always override for the same date
+### Auto FX ✅
+- `src/services/fxSync.service.ts` — fetches all USD-based rates from Open Exchange Rates free API
+- Settings → Auto exchange rates section: toggle, App ID input, "Sync now" button, last-sync timestamp
+- Fetched rates stored with `source: 'api'`; manual rates continue to coexist for the same date
+- Settings persisted via `fx_auto_enabled`, `fx_api_key`, `fx_last_sync` in the `settings` table
 
 ---
-
-## Backlog / Phase 3
-
-| Feature | Notes |
-|---|---|
-| Multi-user / entity support | Separate ledgers per "entity" (personal vs business) |
-| Double-entry ledger view | Full debit/credit view per transaction |
-| Tax report export | Group by country, summarise income/expense per fiscal year |
-| Receipt OCR | Was started earlier; re-integrate with transaction form |
-| Push notifications | Recurring transaction reminders |
-| iCloud / Google Drive backup | Full SQLite backup, not just CSV |
-| Widget | Net worth / today's spending on home screen |
 
 ---
 

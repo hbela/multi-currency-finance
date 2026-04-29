@@ -25,6 +25,15 @@ import { getSetting, setSetting } from '@/src/db/settings';
 import { AccountType, TransactionType } from '@/src/types';
 import { useAppTheme } from '@/src/theme';
 import { exportDatabaseAsCsv } from '@/src/utils/exportCsv';
+import {
+  syncFxRates,
+  getFxAutoEnabled,
+  setFxAutoEnabled,
+  getFxApiKey,
+  setFxApiKey,
+  getFxLastSync,
+} from '@/src/services/fxSync.service';
+import { useExchangeRateStore } from '@/src/store/exchangeRateStore';
 
 export default function SettingsScreen() {
   const theme = useAppTheme();
@@ -53,8 +62,26 @@ export default function SettingsScreen() {
   const [exportingCsv, setExportingCsv] = useState(false);
   const [exportSnackbar, setExportSnackbar] = useState<{ visible: boolean; message: string; error: boolean }>({ visible: false, message: '', error: false });
 
+  // Auto FX state
+  const loadExchangeRates = useExchangeRateStore((s) => s.load);
+  const [fxEnabled, setFxEnabled] = useState(false);
+  const [fxApiKey, setFxApiKeyState] = useState('');
+  const [fxLastSync, setFxLastSync] = useState<number | null>(null);
+  const [fxSyncing, setFxSyncing] = useState(false);
+  const [fxSnackbar, setFxSnackbar] = useState<{ visible: boolean; message: string; error: boolean }>({ visible: false, message: '', error: false });
+
   useEffect(() => {
     getSetting('show_welcome').then((val) => setShowWelcome(val !== 'false'));
+  }, []);
+
+  useEffect(() => {
+    Promise.all([getFxAutoEnabled(), getFxApiKey(), getFxLastSync()]).then(
+      ([enabled, key, lastSync]) => {
+        setFxEnabled(enabled);
+        setFxApiKeyState(key);
+        setFxLastSync(lastSync);
+      }
+    );
   }, []);
 
   const handleToggleWelcome = async (value: boolean) => {
@@ -103,6 +130,36 @@ export default function SettingsScreen() {
     setCategoryOpen(false);
     setCategoryName('');
     setCategoryType('EXPENSE');
+  };
+
+  const handleFxToggle = async (val: boolean) => {
+    setFxEnabled(val);
+    await setFxAutoEnabled(val);
+  };
+
+  const handleFxApiKeyBlur = async () => {
+    await setFxApiKey(fxApiKey);
+  };
+
+  const handleFxSync = async () => {
+    if (!fxApiKey.trim()) {
+      setFxSnackbar({ visible: true, message: t('autoFx.apiKeyHint'), error: true });
+      return;
+    }
+    setFxSyncing(true);
+    try {
+      const result = await syncFxRates(fxApiKey.trim());
+      if (result.error) {
+        setFxSnackbar({ visible: true, message: t('autoFx.syncError', { error: result.error }), error: true });
+      } else {
+        await loadExchangeRates();
+        const lastSync = Date.now();
+        setFxLastSync(lastSync);
+        setFxSnackbar({ visible: true, message: t('autoFx.syncSuccess', { count: result.synced }), error: false });
+      }
+    } finally {
+      setFxSyncing(false);
+    }
   };
 
   const screenshotCountLabel = t(
@@ -247,6 +304,50 @@ export default function SettingsScreen() {
 
       <Divider />
 
+      {/* Auto FX */}
+      <List.Section>
+        <List.Subheader>{t('autoFx.section')}</List.Subheader>
+        <List.Item
+          title={t('autoFx.toggle')}
+          description={t('autoFx.toggleDesc')}
+          left={(p) => <List.Icon {...p} icon="refresh-auto" />}
+          right={() => (
+            <Switch value={fxEnabled} onValueChange={handleFxToggle} />
+          )}
+        />
+        {fxEnabled && (
+          <View style={{ paddingHorizontal: 16, gap: 12, paddingBottom: 8 }}>
+            <TextInput
+              mode="outlined"
+              label={t('autoFx.apiKey')}
+              placeholder={t('autoFx.apiKeyHint')}
+              value={fxApiKey}
+              onChangeText={setFxApiKeyState}
+              onBlur={handleFxApiKeyBlur}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry={false}
+              dense
+            />
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              {fxLastSync
+                ? t('autoFx.lastSync', { date: new Date(fxLastSync).toLocaleString() })
+                : t('autoFx.neverSynced')}
+            </Text>
+            <Button
+              mode="contained-tonal"
+              icon="refresh"
+              loading={fxSyncing}
+              disabled={fxSyncing}
+              onPress={handleFxSync}>
+              {fxSyncing ? t('autoFx.syncing') : t('autoFx.syncNow')}
+            </Button>
+          </View>
+        )}
+      </List.Section>
+
+      <Divider />
+
       {/* Screenshots */}
       <List.Section>
         <List.Subheader>{t('settings.screenshots')}</List.Subheader>
@@ -350,6 +451,14 @@ export default function SettingsScreen() {
         duration={exportSnackbar.error ? 6000 : 2500}
         action={{ label: t('common.ok'), onPress: () => setExportSnackbar((s) => ({ ...s, visible: false })) }}>
         {exportSnackbar.message}
+      </Snackbar>
+
+      <Snackbar
+        visible={fxSnackbar.visible}
+        onDismiss={() => setFxSnackbar((s) => ({ ...s, visible: false }))}
+        duration={fxSnackbar.error ? 6000 : 2500}
+        action={{ label: t('common.ok'), onPress: () => setFxSnackbar((s) => ({ ...s, visible: false })) }}>
+        {fxSnackbar.message}
       </Snackbar>
     </ScrollView>
   );
